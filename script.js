@@ -36,8 +36,10 @@ async function fetchWeather() {
 
         updateWeatherWidget(temp, code, isDay);
     } catch (error) {
-        console.error("Błąd pobierania pogody:", error);
-        document.getElementById('weather-text').textContent = "Error";
+        console.error("Błąd pobierania pogody z API:", error);
+        // Awaryjny tekst w razie braku internetu/błędu API
+        const textSpan = document.getElementById('weather-text');
+        if (textSpan) textSpan.textContent = currentLanguage === 'pl' ? "Pogoda niedostępna" : "Weather offline";
     }
 }
 
@@ -45,43 +47,71 @@ function updateWeatherWidget(temp, code, isDay) {
     const textSpan = document.getElementById('weather-text');
     const icon = document.getElementById('weather-icon');
     if (!textSpan || !icon) return;
-    icon.className = "fas"; // Reset klas ikony
+    
+    icon.className = "fas"; // Czyszczenie poprzednich ikon
 
-    // 1. Sprawdzamy najpierw czy jest czyste niebo (kod 0) lub lekkie chmury (kody 1, 2)
-    if ([0, 1, 2].includes(code)) {
+    // --- LOGIKA IKON I ZACHMURZENIA ---
+    
+    // KOD 0: Idealnie czyste niebo
+    if (code === 0) {
         if (isDay === 1) {
-            // Ikona na dzień
-            icon.classList.add(code === 0 ? 'fa-sun' : 'fa-cloud-sun');
+            icon.classList.add('fa-sun');
             icon.style.color = '#f1c40f'; // Żółte słońce
         } else {
-            // Ikona na noc (zamiast słońca - księżyc!)
-            icon.classList.add(code === 0 ? 'fa-moon' : 'fa-cloud-moon');
-            icon.style.color = '#f1c40f'; // Ciepły kolor księżyca
+            icon.classList.add('fa-moon');
+            icon.style.color = '#f1c40f'; // Żółty księżyc
         }
-    } 
-    // 2. Obsługa opadów (deszcz/śnieg/burza - noc nie zmienia faktu, że leje)
+    }
+    // KODY 1, 2: Częściowe zachmurzenie (lekkie chmurki)
+    else if (code === 1 || code === 2) {
+        if (isDay === 1) {
+            icon.classList.add('fa-cloud-sun');
+            icon.style.color = '#bdc3c7'; // Słońce za chmurą
+        } else {
+            icon.classList.add('fa-cloud-moon');
+            icon.style.color = '#bdc3c7'; // Księżyc za chmurą
+        }
+    }
+    // KOD 3: Całkowite zachmurzenie (gęste chmury, ponuro)
+    else if (code === 3) {
+        icon.classList.add('fa-cloud');
+        icon.style.color = '#95a5a6'; // Szary, bury kolor
+    }
+    // KODY 51-65 oraz 80-82: Opady deszczu
     else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) {
         icon.classList.add('fa-cloud-showers-heavy');
         icon.style.color = '#3498db'; // Niebieski deszcz
-    } else if ([71, 73, 75, 77, 85, 86].includes(code)) {
+    }
+    // KODY 71-77 oraz 85-86: Opady śniegu
+    else if ([71, 73, 75, 77, 85, 86].includes(code)) {
         icon.classList.add('fa-snowflake');
-        icon.style.color = '#a5f2f3'; // Zimowy błękit
-    } else if ([95, 96, 99].includes(code)) {
+        icon.style.color = '#a5f2f3'; // Lodowy błękit
+    }
+    // KODY 95-99: Burza
+    else if ([95, 96, 99].includes(code)) {
         icon.classList.add('fa-cloud-bolt');
-        icon.style.color = '#e67e22'; // Piorun
-    } 
-    // 3. Pełne, gęste zachmurzenie (kod 3)
+        icon.style.color = '#e67e22'; // Pomarańczowy piorun
+    }
+    // Awaryjny restart ikony w razie nieznanego kodu z API
     else {
         icon.classList.add('fa-cloud');
-        icon.style.color = '#95a5a6'; // Szary
+        icon.style.color = '#95a5a6';
     }
 
-    // Wyświetlanie tekstu w zależności od języka
+    // --- BEZPIECZNE GENEROWANIE TEKSTU (Z ZABEZPIECZENIEM PRZED "ERROR") ---
+    // Definiujemy awaryjną nazwę miasta, jeśli plik JSON jeszcze się nie wczytał
+    let cityName = currentLanguage === 'pl' ? 'Warszawa' : 'Warsaw';
+    
+    // Jeśli plik JSON działa i ma klucz, podmień na ten z pliku
+    if (translations && translations.weather_city) {
+        cityName = translations.weather_city;
+    }
+
     if (currentLanguage === 'pl') {
-        textSpan.textContent = `${translations.weather_city || 'Warszawa'}: ${temp}°C`;
+        textSpan.textContent = `${cityName}: ${temp}°C`;
     } else {
         const tempF = Math.round((temp * 9/5) + 32);
-        textSpan.textContent = `${translations.weather_city || 'Warsaw'}: ${tempF}°F`;
+        textSpan.textContent = `${cityName}: ${tempF}°F`;
     }
 }
 

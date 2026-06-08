@@ -21,10 +21,10 @@ const i18n = {
     }
 };
 
-// --- 1. POGODA Z API (Open-Meteo) ---
 async function fetchWeather() {
-    const lat = 52.2297;
-    const lon = 21.0122;
+    const lat = 52.1325;
+    const lon = 21.0615;
+    // DODALIŚMY parametr &current_weather=true (który w Open-Meteo automatycznie zwraca 'is_day')
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
 
     try {
@@ -32,29 +32,56 @@ async function fetchWeather() {
         const data = await response.json();
         const temp = Math.round(data.current_weather.temperature);
         const code = data.current_weather.weathercode;
-        updateWeatherWidget(temp, code);
+        const isDay = data.current_weather.is_day; // 1 = dzień, 0 = noc
+
+        updateWeatherWidget(temp, code, isDay);
     } catch (error) {
         console.error("Błąd pobierania pogody:", error);
         document.getElementById('weather-text').textContent = "Error";
     }
 }
 
-function updateWeatherWidget(temp, code) {
+function updateWeatherWidget(temp, code, isDay) {
     const textSpan = document.getElementById('weather-text');
     const icon = document.getElementById('weather-icon');
-    icon.className = "fas"; 
+    if (!textSpan || !icon) return;
+    icon.className = "fas"; // Reset klas ikony
 
-    if (code === 0) icon.classList.add('fa-sun'), icon.style.color = '#f1c40f';
-    else if ([1, 2, 3].includes(code)) icon.classList.add('fa-cloud-sun'), icon.style.color = '#bdc3c7';
-    else if ([51, 53, 55, 61, 63, 65].includes(code)) icon.classList.add('fa-cloud-showers-heavy'), icon.style.color = '#3498db';
-    else if ([71, 73, 75, 77, 85, 86].includes(code)) icon.classList.add('fa-snowflake'), icon.style.color = '#a5f2f3';
-    else icon.classList.add('fa-cloud'), icon.style.color = '#95a5a6';
+    // 1. Sprawdzamy najpierw czy jest czyste niebo (kod 0) lub lekkie chmury (kody 1, 2)
+    if ([0, 1, 2].includes(code)) {
+        if (isDay === 1) {
+            // Ikona na dzień
+            icon.classList.add(code === 0 ? 'fa-sun' : 'fa-cloud-sun');
+            icon.style.color = '#f1c40f'; // Żółte słońce
+        } else {
+            // Ikona na noc (zamiast słońca - księżyc!)
+            icon.classList.add(code === 0 ? 'fa-moon' : 'fa-cloud-moon');
+            icon.style.color = '#f1c40f'; // Ciepły kolor księżyca
+        }
+    } 
+    // 2. Obsługa opadów (deszcz/śnieg/burza - noc nie zmienia faktu, że leje)
+    else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) {
+        icon.classList.add('fa-cloud-showers-heavy');
+        icon.style.color = '#3498db'; // Niebieski deszcz
+    } else if ([71, 73, 75, 77, 85, 86].includes(code)) {
+        icon.classList.add('fa-snowflake');
+        icon.style.color = '#a5f2f3'; // Zimowy błękit
+    } else if ([95, 96, 99].includes(code)) {
+        icon.classList.add('fa-cloud-bolt');
+        icon.style.color = '#e67e22'; // Piorun
+    } 
+    // 3. Pełne, gęste zachmurzenie (kod 3)
+    else {
+        icon.classList.add('fa-cloud');
+        icon.style.color = '#95a5a6'; // Szary
+    }
 
+    // Wyświetlanie tekstu w zależności od języka
     if (currentLanguage === 'pl') {
-        textSpan.textContent = `${i18n.pl.weather_city}: ${temp}°C`;
+        textSpan.textContent = `${translations.weather_city || 'Warszawa'}: ${temp}°C`;
     } else {
         const tempF = Math.round((temp * 9/5) + 32);
-        textSpan.textContent = `${i18n.en.weather_city}: ${tempF}°F`;
+        textSpan.textContent = `${translations.weather_city || 'Warsaw'}: ${tempF}°F`;
     }
 }
 

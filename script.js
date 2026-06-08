@@ -5,10 +5,10 @@ let translations = {}; // Tu trafią teksty po pobraniu pliku JSON
 // --- NOWA FUNKCJA: Pobieranie tekstów z plików JSON ---
 async function loadTranslations(lang) {
     try {
-        const response = await fetch(`lang/${lang}.json`);
+        const response = await fetch(`lang_${lang}.json`);
         translations = await response.json();
     } catch (error) {
-        console.error(`Nie udało się załadować pliku językowego lang/${lang}.json:`, error);
+        console.error(`Nie udało się załadować pliku językowego lang_${lang}.json:`, error);
     }
 }
 

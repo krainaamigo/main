@@ -1,30 +1,21 @@
-// Globalny stan języka
+// Globalny stan aplikacji
 let currentLanguage = 'pl';
+let translations = {}; // Tu trafią teksty po pobraniu pliku JSON
 
-// Słownik tłumaczeń
-const i18n = {
-    pl: {
-        nav_home: "Strona Główna", nav_attractions: "Atrakcje", nav_gallery: "Galeria", nav_offer: "Oferta", nav_contact: "Kontakt",
-        home_title: "Witajcie w Krainie Rozrywki Amigo!", home_desc: "Nasze centrum to idealne miejsce dla całych rodzin...",
-        gallery_title: "Galeria zdjęć", gallery_desc: "Zobacz zdjęcia (Kliknij, aby powiększyć).",
-        sidebar_news: "Informacje Bieżące", sidebar_cal: "Kalendarz Wydarzeń",
-        news_1: "Park otwarty dzisiaj do godziny 21:00!",
-        weather_city: "Warszawa", event_notice: "Wydarzenie specjalne w tym dniu!"
-    },
-    en: {
-        nav_home: "Home", nav_attractions: "Attractions", nav_gallery: "Gallery", nav_offer: "Offer", nav_contact: "Contact",
-        home_title: "Welcome to Amigo Amusement Land!", home_desc: "Our center is the perfect place for whole families...",
-        gallery_title: "Photo Gallery", gallery_desc: "See the smiles of our guests (Click on the image to enlarge).",
-        sidebar_news: "Current News", sidebar_cal: "Event Calendar",
-        news_1: "The park is open today until 9:00 PM!",
-        weather_city: "Warsaw", event_notice: "Special event on this day!"
+// --- NOWA FUNKCJA: Pobieranie tekstów z plików JSON ---
+async function loadTranslations(lang) {
+    try {
+        const response = await fetch(`lang/${lang}.json`);
+        translations = await response.json();
+    } catch (error) {
+        console.error(`Nie udało się załadować pliku językowego lang/${lang}.json:`, error);
     }
-};
+}
 
+// --- 1. POGODA Z API (Open-Meteo) ---
 async function fetchWeather() {
     const lat = 52.1325;
     const lon = 21.0615;
-    // DODALIŚMY parametr &current_weather=true (który w Open-Meteo automatycznie zwraca 'is_day')
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
 
     try {
@@ -163,7 +154,7 @@ function generateCalendar() {
 
         if (eventDays.includes(day)) {
             dayDiv.classList.add('has-event');
-            dayDiv.onclick = () => alert(i18n[currentLanguage].event_notice);
+            dayDiv.onclick = () => alert(translations.event_notice || "Event!");
         }
         container.appendChild(dayDiv);
     }
@@ -183,24 +174,29 @@ function renderPage(pageId) {
     const targetPage = document.getElementById(`page-${pageId}`);
     if (targetPage) {
         targetPage.classList.add('active');
-        document.getElementById(`nav-${pageId}`).classList.add('active');
+        const navLink = document.getElementById(`nav-${pageId}`);
+        if (navLink) navLink.classList.add('active');
     }
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
-// --- 4. ZMIANA JĘZYKA ---
-function changeLanguage(lang) {
+// --- 4. ZMIANA JĘZYKA (Z MODYFIKACJĄ ASYNCHRONICZNĄ) ---
+async function changeLanguage(lang) {
     currentLanguage = lang;
     localStorage.setItem('preferred_language', lang);
+    
+    // Najpierw pobierz nowe teksty z pliku JSON
+    await loadTranslations(lang);
     
     document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.getElementById(`btn-${lang}`);
     if (activeBtn) activeBtn.classList.add('active');
     
+    // Podmień teksty na stronie na te z pliku JSON
     document.querySelectorAll('[data-i18n]').forEach(element => {
         const key = element.getAttribute('data-i18n');
-        if (i18n[lang][key]) {
-            element.textContent = i18n[lang][key];
+        if (translations[key]) {
+            element.textContent = translations[key];
         }
     });
 
@@ -242,7 +238,6 @@ function changeImage(direction) {
     lightboxImg.src = galleryImages[currentImgIndex].src;
 }
 
-// Eventy klawiatury dla galerii i kliknięcia w tło
 window.addEventListener('keydown', (e) => {
     if (!lightbox || !lightbox.classList.contains('active')) return;
     if (e.key === 'ArrowRight') changeImage(1);

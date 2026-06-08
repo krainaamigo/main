@@ -1,0 +1,29 @@
+{
+    "nav_home": "Strona Główna",
+    "nav_attractions": "Atrakcje",
+    "nav_gallery": "Galeria",
+    "nav_offer": "Oferta",
+    "nav_contact": "Kontakt",
+
+    "home_title": "Witajcie w Krainie Rozrywki Amigo!",
+    "home_desc": "Nasze centrum to idealne miejsce dla całych rodzin, szukających niezapomnianych wrażeń, aktywnego wypoczynku oraz bezpiecznej zabawy na świeżym powietrzu. Dbamy o to, aby każdy moment spędzony u nas był pełen uśmiechu.",
+
+    "attractions_title": "Nasze Niesamowite Atrakcje",
+    "attractions_desc": "Sprawdź co dla Was przygotowaliśmy! Od ekstremalnych przeżyć po bezpieczne strefy malucha.",
+
+    "gallery_title": "Galeria zdjęć",
+    "gallery_desc": "Zobacz zdjęcia z naszego parku (Kliknij na zdjęcie, aby je powiększyć).",
+
+    "offer_title": "Cennik i Pakiety",
+    "price_1": "Bilet normalny: 59 zł / dzień",
+
+    "contact_title": "Skontaktuj się z nami",
+    "contact_btn": "Wyślij",
+
+    "sidebar_news": "Informacje Bieżące",
+    "sidebar_cal": "Kalendarz Wydarzeń",
+    "news_1": "Park otwarty dzisiaj do godziny 21:00!",
+    
+    "weather_city": "Warszawa",
+    "event_notice": "Wydarzenie specjalne w tym dniu!"
+}

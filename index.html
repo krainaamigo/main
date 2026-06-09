@@ -50,18 +50,43 @@
             <section id="page-gallery" class="page-section">
                 <h2 data-i18n="gallery_title">Galeria zdjęć</h2>
                 <p data-i18n="gallery_desc">Zobacz zdjęcia (Kliknij, aby powiększyć).</p>
+                
                 <div class="grid-gallery">
-                    <div claas="image-container"><img class="gallery-img" src="images/gallery/bajonki.jpeg" alt="Bajonki"></div>
-                    <div claas="image-container"><img class="gallery-img" src="images/gallery/hipopotamy.jpeg" alt="Hipopotamy"></div>
-                    <div claas="image-container"><img class="gallery-img" src="images/gallery/safari.jpeg" alt="Safari"></div>
-                    <div claas="image-container"><img class="gallery-img" src="images/gallery/lodeczki.jpeg" alt="Łódeczki wodne"></div>
-                    <div claas="image-container"><img class="gallery-img" src="images/gallery/walec.jpeg" alt="Walec wodny"></div>
-                    <div claas="image-container"><img class="gallery-img" src="images/gallery/eliminator.jpeg" alt="Eliminator"></div>
-                    <div claas="image-container"><img class="gallery-img" src="images/gallery/eurobungee.jpeg" alt="Eurobungee"></div>
-                    <div claas="image-container"><img class="gallery-img" src="images/gallery/kolejka.jpeg" alt="Kolejka"></div>
-                    <div claas="image-container"><img class="gallery-img" src="images/gallery/kosz.jpeg" alt="Koszykówka"></div>
-                    <div claas="image-container"><img class="gallery-img" src="images/gallery/namiot.jpeg" alt="Namiot"></div>
-                    <div claas="image-container"><img class="gallery-img" src="images/gallery/nagrody.jpeg" alt="Nagrody"></div>
+                    <div class="ticket-wrapper">
+                        <div class="ticket-body">
+                            <img class="gallery-img" src="https://picsum.photos/id/102/1200/800" alt="Galeria 1">
+                            <div class="ticket-stub">
+                                <span>Bungee</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ticket-wrapper">
+                        <div class="ticket-body">
+                            <img class="gallery-img" src="https://picsum.photos/id/103/1200/800" alt="Galeria 2">
+                            <div class="ticket-stub">
+                                <span>Karuzela</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ticket-wrapper">
+                        <div class="ticket-body">
+                            <img class="gallery-img" src="https://picsum.photos/id/104/1200/800" alt="Galeria 3">
+                            <div class="ticket-stub">
+                                <span>Park Linowy</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ticket-wrapper">
+                        <div class="ticket-body">
+                            <img class="gallery-img" src="https://picsum.photos/id/106/1200/800" alt="Galeria 4">
+                            <div class="ticket-stub">
+                                <span>Strefa Gier</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -74,10 +99,44 @@
 
             <section id="page-contact" class="page-section">
                 <h2 data-i18n="contact_title">Skontaktuj się z nami</h2>
-                <form onsubmit="event.preventDefault(); alert('Wiadomość wysłana!');">
-                    <div class="form-group"><input type="text" placeholder="Imię / Name" required></div>
-                    <button type="submit" class="submit-btn" data-i18n="contact_btn">Wyślij</button>
-                </form>
+                
+                <div class="contact-container">
+                    <div class="contact-info">
+                        <div class="info-item">
+                            <i class="fas fa-phone-alt"></i>
+                            <div>
+                                <p><strong>Telefon:</strong></p>
+                                <a href="tel:+48790709410">+48 790 709 410</a>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <i class="fas fa-envelope"></i>
+                            <div>
+                                <p><strong>E-mail:</strong></p>
+                                <a href="mailto:kontakt@amigopark.pl">kontakt.amigo1@gmail.com</a>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <i class="fas fa-share-alt"></i>
+                            <div>
+                                <p><strong>Social Media:</strong></p>
+                                <div class="social-links">
+                                    <a href="https://facebook.com" target="_blank" class="fb"><i class="fab fa-facebook-f"></i> Facebook</a>
+                                    <a href="https://instagram.com" target="_blank" class="ig"><i class="fab fa-instagram"></i> Instagram</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form class="contact-form" onsubmit="event.preventDefault(); alert('Wiadomość wysłana!');">
+                        <div class="form-group"><input type="text" placeholder="Imię / Name" required></div>
+                        <div class="form-group"><input type="email" placeholder="E-mail" required></div>
+                        <div class="form-group"><textarea rows="4" placeholder="Twoja wiadomość / Message" required></textarea></div>
+                        <button type="submit" class="submit-btn" data-i18n="contact_btn">Wyślij</button>
+                    </form>
+                </div>
             </section>
         </main>
 

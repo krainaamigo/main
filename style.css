@@ -129,6 +129,7 @@ p { line-height: 1.7; color: #555; margin-bottom: 15px; }
 }
 
 .ticket-body {
+    width: 50%;
     display: flex;
     background: white;
     border-radius: 6px;

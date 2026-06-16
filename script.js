@@ -1,18 +1,115 @@
-// Globalny stan aplikacji
-let currentLanguage = 'pl';
-let translations = {}; // Tu trafią teksty po pobraniu pliku JSON
+// Inicjalizacja bezpiecznego klienta Supabase
+// Klucz anonimowy (publiczny) jest bezpieczny, bo baza chroni się sama za pomocą reguł RLS
+const supabaseUrl = 'https://eegecpstukwlmlfkbgfh.supabase.co';
+const supabaseKey = 'sb_publishable_ZEzgCDMu5JsT48WqcJuBAg_iXjUaxOf';
+const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-// --- NOWA FUNKCJA: Pobieranie tekstów z plików JSON ---
-async function loadTranslations(lang) {
+// ==========================================
+// CONFIG: Uzupełnij swoimi danymi z Supabase
+// ==========================================
+let currentLanguage = 'pl';
+let translations = {};
+
+// --- 1. POBIERANIE TEKSTÓW Z BAZY SUPABASE ---
+async function loadTranslationsFromDB() {
     try {
-        const response = await fetch(`lang_${lang}.json`);
-        translations = await response.json();
+        // Pobieramy całą tabelę z tekstami z chmury
+        let { data, error } = await _supabase.from('translations').select('*');
+        
+        if (error) throw error;
+
+        // Przekształcamy odpowiedź na płaski słownik klucz -> tekst dla wybranego języka
+        translations = {};
+        data.forEach(row => {
+            translations[row.key] = row[currentLanguage]; 
+        });
+
+        // Wstrzykujemy pobrane teksty w elementy HTML na stronie
+        document.querySelectorAll('[data-i18n]').forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            if (translations[key]) {
+                element.textContent = translations[key];
+            }
+        });
+
+        // Po załadowaniu tekstów odświeżamy widgety zależne od języka
+        fetchWeather();
+        generateCalendar();
+
     } catch (error) {
-        console.error(`Nie udało się załadować pliku językowego lang_${lang}.json:`, error);
+        console.error("Błąd pobierania danych z Supabase:", error.message);
+    }
+}
+loadTranslationsFromDB();
+
+// --- 2. LOGOWANIE ADMINISTRATORA (BEZPIECZNE) ---
+async function loginAsAdmin() {
+    const email = prompt("Email administratora:");
+    const password = prompt("Hasło:");
+
+    if (!email || !password) return;
+
+    // Supabase weryfikuje dane w chmurze i zapisuje token sesji
+    const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+        alert("Błąd logowania: " + error.message);
+        return;
+    }
+
+    alert("Zalogowano pomyślnie! Tryb edycji został aktywowany.");
+    enableLiveEditing();
+}
+
+// --- 3. WŁĄCZENIE TRYBU EDYCJI "LIVE" NA STRONIE ---
+function enableLiveEditing() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+        
+        // Zapis do bazy wywołuje się w momencie, gdy admin kliknie poza edytowane pole (blur)
+        el.addEventListener('blur', async (event) => {
+            const key = event.target.getAttribute('data-i18n');
+            const newText = event.target.textContent.trim();
+
+            const updateData = {};
+            updateData[currentLanguage] = newText;
+
+            // Wyślij aktualizację do Supabase
+            const { error } = await _supabase
+                .from('translations')
+                .update(updateData)
+                .eq('key', key);
+
+            if (error) {
+                alert("Nie udało się zapisać w bazie: " + error.message);
+            } else {
+                console.log(`Zapisano w chmurze: ${key} -> ${newText}`);
+            }
+        });
+    });
+    
+    // Pokazujemy pasek informacyjny na dole strony
+    const adminBar = document.getElementById('admin-save-bar');
+    if (adminBar) {
+        adminBar.style.display = 'flex';
+        adminBar.innerHTML = "<span>Tryb administratora aktywny. Kliknij dowolny tekst, aby go zmienić. Zmiany zapisują się same!</span>";
     }
 }
 
-// --- 1. POGODA Z API (Open-Meteo) ---
+// --- 4. ZMIANA JĘZYKA STRONY ---
+async function changeLanguage(lang) {
+    currentLanguage = lang;
+    localStorage.setItem('preferred_language', lang);
+    
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById(`btn-${lang}`);
+    if (activeBtn) activeBtn.classList.add('active');
+    
+    // Pobierz z bazy teksty dla nowo wybranego języka
+    await loadTranslationsFromDB();
+}
+
+// --- 5. POGODA Z API (Open-Meteo) ---
 async function fetchWeather() {
     const lat = 52.1325;
     const lon = 21.0615;
@@ -23,12 +120,11 @@ async function fetchWeather() {
         const data = await response.json();
         const temp = Math.round(data.current_weather.temperature);
         const code = data.current_weather.weathercode;
-        const isDay = data.current_weather.is_day; // 1 = dzień, 0 = noc
+        const isDay = data.current_weather.is_day;
 
         updateWeatherWidget(temp, code, isDay);
     } catch (error) {
         console.error("Błąd pobierania pogody z API:", error);
-        // Awaryjny tekst w razie braku internetu/błędu API
         const textSpan = document.getElementById('weather-text');
         if (textSpan) textSpan.textContent = currentLanguage === 'pl' ? "Pogoda niedostępna" : "Weather offline";
     }
@@ -39,61 +135,32 @@ function updateWeatherWidget(temp, code, isDay) {
     const icon = document.getElementById('weather-icon');
     if (!textSpan || !icon) return;
     
-    icon.className = "fas"; // Czyszczenie poprzednich ikon
+    icon.className = "fas"; 
 
-    // --- LOGIKA IKON I ZACHMURZENIA ---
-    
-    // KOD 0: Idealnie czyste niebo
     if (code === 0) {
-        if (isDay === 1) {
-            icon.classList.add('fa-sun');
-            icon.style.color = '#f1c40f'; // Żółte słońce
-        } else {
-            icon.classList.add('fa-moon');
-            icon.style.color = '#f1c40f'; // Żółty księżyc
-        }
-    }
-    // KODY 1, 2: Częściowe zachmurzenie (lekkie chmurki)
-    else if (code === 1 || code === 2) {
-        if (isDay === 1) {
-            icon.classList.add('fa-cloud-sun');
-            icon.style.color = '#bdc3c7'; // Słońce za chmurą
-        } else {
-            icon.classList.add('fa-cloud-moon');
-            icon.style.color = '#bdc3c7'; // Księżyc za chmurą
-        }
-    }
-    // KOD 3: Całkowite zachmurzenie (gęste chmury, ponuro)
-    else if (code === 3) {
+        icon.classList.add(isDay === 1 ? 'fa-sun' : 'fa-moon');
+        icon.style.color = '#f1c40f';
+    } else if (code === 1 || code === 2) {
+        icon.classList.add(isDay === 1 ? 'fa-cloud-sun' : 'fa-cloud-moon');
+        icon.style.color = '#bdc3c7';
+    } else if (code === 3) {
         icon.classList.add('fa-cloud');
-        icon.style.color = '#95a5a6'; // Szary, bury kolor
-    }
-    // KODY 51-65 oraz 80-82: Opady deszczu
-    else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) {
+        icon.style.color = '#95a5a6';
+    } else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) {
         icon.classList.add('fa-cloud-showers-heavy');
-        icon.style.color = '#3498db'; // Niebieski deszcz
-    }
-    // KODY 71-77 oraz 85-86: Opady śniegu
-    else if ([71, 73, 75, 77, 85, 86].includes(code)) {
+        icon.style.color = '#3498db';
+    } else if ([71, 73, 75, 77, 85, 86].includes(code)) {
         icon.classList.add('fa-snowflake');
-        icon.style.color = '#a5f2f3'; // Lodowy błękit
-    }
-    // KODY 95-99: Burza
-    else if ([95, 96, 99].includes(code)) {
+        icon.style.color = '#a5f2f3';
+    } else if ([95, 96, 99].includes(code)) {
         icon.classList.add('fa-cloud-bolt');
-        icon.style.color = '#e67e22'; // Pomarańczowy piorun
-    }
-    // Awaryjny restart ikony w razie nieznanego kodu z API
-    else {
+        icon.style.color = '#e67e22';
+    } else {
         icon.classList.add('fa-cloud');
         icon.style.color = '#95a5a6';
     }
 
-    // --- BEZPIECZNE GENEROWANIE TEKSTU (Z ZABEZPIECZENIEM PRZED "ERROR") ---
-    // Definiujemy awaryjną nazwę miasta, jeśli plik JSON jeszcze się nie wczytał
     let cityName = currentLanguage === 'pl' ? 'Warszawa' : 'Warsaw';
-    
-    // Jeśli plik JSON działa i ma klucz, podmień na ten z pliku
     if (translations && translations.weather_city) {
         cityName = translations.weather_city;
     }
@@ -106,7 +173,7 @@ function updateWeatherWidget(temp, code, isDay) {
     }
 }
 
-// --- 2. DYNAMICZNY KALENDARZ ---
+// --- 6. DYNAMICZNY KALENDARZ ---
 function generateCalendar() {
     const container = document.getElementById('calendar-days-container');
     const monthYearHeader = document.getElementById('calendar-month-year');
@@ -160,7 +227,7 @@ function generateCalendar() {
     }
 }
 
-// --- 3. OBSŁUGA STRON (ROUTING #) ---
+// --- 7. OBSŁUGA STRON (ROUTING) ---
 function navigateTo(pageId) {
     window.location.hash = pageId;
     renderPage(pageId);
@@ -180,43 +247,19 @@ function renderPage(pageId) {
     window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
-// --- 4. ZMIANA JĘZYKA (Z MODYFIKACJĄ ASYNCHRONICZNĄ) ---
-async function changeLanguage(lang) {
-    currentLanguage = lang;
-    localStorage.setItem('preferred_language', lang);
-    
-    // Najpierw pobierz nowe teksty z pliku JSON
-    await loadTranslations(lang);
-    
-    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-    const activeBtn = document.getElementById(`btn-${lang}`);
-    if (activeBtn) activeBtn.classList.add('active');
-    
-    // Podmień teksty na stronie na te z pliku JSON
-    document.querySelectorAll('[data-i18n]').forEach(element => {
-        const key = element.getAttribute('data-i18n');
-        if (translations[key]) {
-            element.textContent = translations[key];
-        }
-    });
-
-    fetchWeather();
-    generateCalendar();
-}
-
-// --- 5. MENU MOBILNE ---
+// --- 8. MENU MOBILNE ---
 function toggleMenu() {
     document.getElementById('mobile-nav').classList.toggle('open');
 }
 
-// --- 6. POWIĘKSZANIE ZDJĘĆ (LIGHTBOX) ---
+// --- 9. LIGHTBOX (GALERIA) ---
 let currentImgIndex = 0;
-const galleryImages = document.querySelectorAll('.gallery-img');
+const galleryImages = document.querySelectorAll('.ticket-wrapper');
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
 
-galleryImages.forEach((img, index) => {
-    img.addEventListener('click', () => { currentImgIndex = index; openLightbox(img.src); });
+galleryImages.forEach((ticket, index) => {
+    ticket.addEventListener('click', () => { currentImgIndex = index; openLightbox(ticket.children[0].children[0].src); });
 });
 
 function openLightbox(src) {
@@ -235,7 +278,7 @@ function changeImage(direction) {
     currentImgIndex += direction;
     if (currentImgIndex >= galleryImages.length) currentImgIndex = 0;
     if (currentImgIndex < 0) currentImgIndex = galleryImages.length - 1;
-    lightboxImg.src = galleryImages[currentImgIndex].src;
+    lightboxImg.src = galleryImages[currentImgIndex].children[0].children[0].src;
 }
 
 window.addEventListener('keydown', (e) => {
@@ -248,10 +291,13 @@ if (lightbox) {
     lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
 }
 
-// --- INICJALIZACJA STARTOWA ---
+// --- INICJALIZACJA STARTOWA STRONY ---
 window.addEventListener('DOMContentLoaded', () => {
     const savedLang = localStorage.getItem('preferred_language') || 'pl';
+    
+    // Pierwsze uruchomienie pobierania z bazy danych Supabase
     changeLanguage(savedLang);
+    
     const currentHash = window.location.hash.replace('#', '') || 'home';
     renderPage(currentHash);
 });

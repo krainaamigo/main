@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kraina Rozrywki Amigo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght=300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -15,11 +16,11 @@
         <button class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
         <nav id="mobile-nav">
             <ul class="nav-links">
-                <li><a id="nav-home" onclick="navigateTo('home')" data-i18n="nav_home">Strona Główna</a></li>
-                <li><a id="nav-attractions" onclick="navigateTo('attractions')" data-i18n="nav_attractions">Atrakcje</a></li>
-                <li><a id="nav-gallery" onclick="navigateTo('gallery')" data-i18n="nav_gallery">Galeria</a></li>
-                <li><a id="nav-offer" onclick="navigateTo('offer')" data-i18n="nav_offer">Oferta</a></li>
-                <li><a id="nav-contact" onclick="navigateTo('contact')" data-i18n="nav_contact">Kontakt</a></li>
+                <li><a id="nav-home" onclick="navigateTo('home')" data-i18n="nav_home"></a></li>
+                <li><a id="nav-attractions" onclick="navigateTo('attractions')" data-i18n="nav_attractions"></a></li>
+                <li><a id="nav-gallery" onclick="navigateTo('gallery')" data-i18n="nav_gallery"></a></li>
+                <li><a id="nav-offer" onclick="navigateTo('offer')" data-i18n="nav_offer"></a></li>
+                <li><a id="nav-contact" onclick="navigateTo('contact')" data-i18n="nav_contact"></a></li>
             </ul>
         </nav>
         <div class="header-right">
@@ -37,26 +38,26 @@
     <div class="main-layout">
         <main class="content-area">
             <section id="page-home" class="page-section">
-                <h2 data-i18n="home_title">Witajcie w Krainie Rozrywki Amigo!</h2>
-                <p data-i18n="home_desc">Nasze centrum to idealne miejsce dla całych rodzin...</p>
-                <img src="https://picsum.photos/id/251/800/350" alt="Home" style="width:100%; border-radius:15px; margin-top:15px;">
+                <h2 data-i18n="home_title"></h2>
+                <p data-i18n="home_desc"></p>
+                <!-- <img src="https://picsum.photos/id/251/800/350" alt="Home" style="width:100%; border-radius:15px; margin-top:15px;"> -->
             </section>
 
             <section id="page-attractions" class="page-section">
-                <h2 data-i18n="attractions_title">Nasze Niesamowite Atrakcje</h2>
-                <p data-i18n="attractions_desc">Sprawdź co dla Was przygotowaliśmy!</p>
+                <h2 data-i18n="attractions_title"></h2>
+                <p data-i18n="attractions_desc"></p>
             </section>
 
             <section id="page-gallery" class="page-section">
-                <h2 data-i18n="gallery_title">Galeria zdjęć</h2>
-                <p data-i18n="gallery_desc">Zobacz zdjęcia (Kliknij, aby powiększyć).</p>
+                <h2 data-i18n="gallery_title"></h2>
+                <p data-i18n="gallery_desc"></p>
                 
                 <div class="grid-gallery">
                     <div class="ticket-wrapper">
                         <div class="ticket-body">
                             <img class="gallery-img" src="images/gallery/bajonki.jpeg" alt="Bajonki">
                             <div class="ticket-stub">
-                                <span>Zjeżdżalnia</span>
+                                <span data-i18n="img_1"></span>
                             </div>
                         </div>
                     </div>
@@ -65,7 +66,7 @@
                         <div class="ticket-body">
                             <img class="gallery-img" src="images/gallery/hipopotamy.jpeg" alt="Hipopotamy">
                             <div class="ticket-stub">
-                                <span>Hipopotamy</span>
+                                <span data-i18n="img_2"></span>
                             </div>
                         </div>
                     </div>
@@ -74,7 +75,7 @@
                         <div class="ticket-body">
                             <img class="gallery-img" src="images/gallery/safari.jpeg" alt="Safari">
                             <div class="ticket-stub">
-                                <span>Safari</span>
+                                <span data-i18n="img_3"></span>
                             </div>
                         </div>
                     </div>
@@ -83,7 +84,7 @@
                         <div class="ticket-body">
                             <img class="gallery-img" src="images/gallery/lodeczki.jpeg" alt="Łódeczki wodne">
                             <div class="ticket-stub">
-                                <span>Łódeczki wodne</span>
+                                <span data-i18n="img_4"></span>
                             </div>
                         </div>
                     </div>
@@ -91,7 +92,7 @@
                         <div class="ticket-body">
                             <img class="gallery-img" src="images/gallery/walec.jpeg" alt="Walec wodny">
                             <div class="ticket-stub">
-                                <span>Walec wodny</span>
+                                <span data-i18n="img_5"></span>
                             </div>
                         </div>
                     </div>
@@ -99,7 +100,7 @@
                         <div class="ticket-body">
                             <img class="gallery-img" src="images/gallery/eliminator.jpeg" alt="Eliminator">
                             <div class="ticket-stub">
-                                <span>Eliminator</span>
+                                <span data-i18n="img_6"></span>
                             </div>
                         </div>
                     </div>
@@ -107,7 +108,7 @@
                         <div class="ticket-body">
                             <img class="gallery-img" src="images/gallery/eurobungee.jpeg" alt="Eurobungee">
                             <div class="ticket-stub">
-                                <span>Eurobungee</span>
+                                <span data-i18n="img_7"></span>
                             </div>
                         </div>
                     </div>
@@ -115,7 +116,7 @@
                         <div class="ticket-body">
                             <img class="gallery-img" src="images/gallery/kolejka.jpeg" alt="Kolejka">
                             <div class="ticket-stub">
-                                <span>Kolejka</span>
+                                <span data-i18n="img_8"></span>
                             </div>
                         </div>
                     </div>
@@ -123,7 +124,7 @@
                         <div class="ticket-body">
                             <img class="gallery-img" src="images/gallery/kosz.jpeg" alt="Koszykówka">
                             <div class="ticket-stub">
-                                <span>Koszykówka</span>
+                                <span data-i18n="img_9"></span>
                             </div>
                         </div>
                     </div>
@@ -131,7 +132,7 @@
                         <div class="ticket-body">
                             <img class="gallery-img" src="images/gallery/namiot.jpeg" alt="Namiot">
                             <div class="ticket-stub">
-                                <span>Namiot</span>
+                                <span data-i18n="img_10"></span>
                             </div>
                         </div>
                     </div>
@@ -139,7 +140,7 @@
                         <div class="ticket-body">
                             <img class="gallery-img" src="images/gallery/nagrody.jpeg" alt="Nagrody">
                             <div class="ticket-stub">
-                                <span>Nagroda</span>
+                                <span data-i18n="img_11"></span>
                             </div>
                         </div>
                     </div>
@@ -218,6 +219,12 @@
         <img id="lightbox-img" class="lightbox-img" src="" alt="Powiększenie">
         <button class="lightbox-btn lightbox-next" onclick="changeImage(1)"><i class="fas fa-chevron-right"></i></button>
     </div>
+
+    <div id="admin-save-bar" style="display: none;"></div>
+
+    <button onclick="loginAsAdmin()" id="btn-admin-login">Zaloguj jako Admin</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script src="script.js"></script>
 </body>

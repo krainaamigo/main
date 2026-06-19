@@ -4,9 +4,8 @@ const supabaseUrl = 'https://eegecpstukwlmlfkbgfh.supabase.co';
 const supabaseKey = 'sb_publishable_ZEzgCDMu5JsT48WqcJuBAg_iXjUaxOf';
 const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-// ==========================================
-// CONFIG: Uzupełnij swoimi danymi z Supabase
-// ==========================================
+let isAdmin = false; 
+
 let currentLanguage = 'pl';
 let translations = {};
 
@@ -32,9 +31,8 @@ async function loadTranslationsFromDB() {
             }
         });
 
-        // Po załadowaniu tekstów odświeżamy widgety zależne od języka
-        fetchWeather();
-        generateCalendar();
+        // POZOSTAW TYLKO TO:
+        fetchWeather(); 
 
     } catch (error) {
         console.error("Błąd pobierania danych z Supabase:", error.message);
@@ -61,38 +59,101 @@ async function loginAsAdmin() {
     enableLiveEditing();
 }
 
-// --- 3. WŁĄCZENIE TRYBU EDYCJI "LIVE" NA STRONIE ---
+// Nowy, globalny "brudnopis" na zmiany administratora zanim trafią do bazy
+let localChanges = {}; 
+
 function enableLiveEditing() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         el.setAttribute('contenteditable', 'true');
         
-        // Zapis do bazy wywołuje się w momencie, gdy admin kliknie poza edytowane pole (blur)
-        el.addEventListener('blur', async (event) => {
+        // ZMIANA: Reagujemy na "input" (czyli pisanie), a nie na "blur" (kliknięcie obok)
+        el.addEventListener('input', (event) => {
             const key = event.target.getAttribute('data-i18n');
             const newText = event.target.textContent.trim();
 
-            const updateData = {};
-            updateData[currentLanguage] = newText;
+            // Zapisujemy zmianę TYLKO lokalnie w pamięci przeglądarki
+            localChanges[key] = newText;
+            
+            // Pokazujemy pasek informacyjny z przyciskami, bo wykryliśmy zmiany
+            showAdminBar(true);
+        });
+    });
+    
+    // Na start trybu edycji pokazujemy pasek w stanie "Gotowy do edycji"
+    showAdminBar(false);
+}
 
-            // Wyślij aktualizację do Supabase
+// Funkcja zarządzająca wyglądem paska na dole
+function showAdminBar(hasChanges) {
+    const adminBar = document.getElementById('admin-save-bar');
+    if (!adminBar) return;
+
+    adminBar.style.display = 'flex';
+
+    if (hasChanges) {
+        adminBar.innerHTML = `
+            <span style="color: #f1c40f;">Masz niezapisane zmiany!</span>
+            <div class="admin-bar-buttons">
+                <button onclick="saveAllChangesToDB()" class="admin-btn save-btn"><i class="fas fa-check"></i> Zapisz zmiany</button>
+                <button onclick="cancelAllChanges()" class="admin-btn cancel-btn"><i class="fas fa-times"></i> Anuluj</button>
+            </div>
+        `;
+    } else {
+        adminBar.innerHTML = `<span>Tryb edycji aktywny. Kliknij dowolny tekst, aby go zmienić. Zmiany zobaczysz po kliknięciu "Zapisz".</span>`;
+    }
+}
+
+// 1. FUNKCJA: ZAPISYWANIE WSZYSTKICH ZMIAN NA RAZ (ZBIORCZO)
+async function saveAllChangesToDB() {
+    const keysToUpdate = Object.keys(localChanges);
+    if (keysToUpdate.length === 0) return;
+
+    try {
+        // Blokujemy przyciski na czas wysyłania danych, żeby nie kliknąć dwa razy
+        document.getElementById('admin-save-bar').innerHTML = `<span><i class="fas fa-spinner fa-spin"></i> Zapisywanie w bazie Supabase...</span>`;
+
+        // Wysyłamy każdą zmianę z brudnopisu do bazy danych
+        for (const key of keysToUpdate) {
+            const updateData = {};
+            updateData[currentLanguage] = localChanges[key];
+
             const { error } = await _supabase
                 .from('translations')
                 .update(updateData)
                 .eq('key', key);
 
-            if (error) {
-                alert("Nie udało się zapisać w bazie: " + error.message);
-            } else {
-                console.log(`Zapisano w chmurze: ${key} -> ${newText}`);
-            }
+            if (error) throw error;
+        }
+
+        alert("Wszystkie zmiany zostały pomyślnie zapisane w chmurze!");
+        localChanges = {}; // Czyszczenie brudnopisu
+        showAdminBar(false); // Przywrócenie paska do stanu podstawowego
+
+    } catch (error) {
+        alert("Wystąpił błąd podczas zapisu: " + error.message);
+        showAdminBar(true); // W razie błędu przywracamy przyciski zapisu
+    }
+}
+
+// 2. FUNKCJA: ANULOWANIE ZMIAN
+function cancelAllChanges() {
+    if (confirm("Czy na pewno chcesz odrzucić wszystkie wprowadzone zmiany?")) {
+        localChanges = {}; // Czyszczenie brudnopisu
+        
+        // Wyłączamy tryb edycji i po prostu przeładowujemy teksty z bazy, 
+        // co przywróci ich oryginalną zawartość na ekranie
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            el.removeAttribute('contenteditable');
         });
-    });
-    
-    // Pokazujemy pasek informacyjny na dole strony
-    const adminBar = document.getElementById('admin-save-bar');
-    if (adminBar) {
-        adminBar.style.display = 'flex';
-        adminBar.innerHTML = "<span>Tryb administratora aktywny. Kliknij dowolny tekst, aby go zmienić. Zmiany zapisują się same!</span>";
+        
+        // Ponownie pobieramy czyste dane z bazy
+        loadTranslationsFromDB();
+        
+        // Ukrywamy pasek (lub resetujemy)
+        const adminBar = document.getElementById('admin-save-bar');
+        if (adminBar) adminBar.style.display = 'none';
+        
+        alert("Zmiany zostały odrzucone.");
     }
 }
 
@@ -174,56 +235,194 @@ function updateWeatherWidget(temp, code, isDay) {
 }
 
 // --- 6. DYNAMICZNY KALENDARZ ---
+// --- GLOBALNE ZMIENNE DLA KALENDARZA ---
+let currentCalendarDate = new Date(); // Przechowuje aktualnie przeglądany miesiąc/rok
+let dbEvents = []; // Lista wydarzeń pobrana z Supabase
+
+// --- 1. FUNKCJA: POBIERANIE WYDARZEŃ Z BAZY ---
+async function fetchEventsFromDB() {
+    try {
+        const { data, error } = await _supabase
+            .from('events')
+            .select('*');
+        
+        if (error) throw error;
+        dbEvents = data || [];
+        // Po pobraniu wydarzeń, generujemy kalendarz na nowo
+        generateCalendar();
+    } catch (err) {
+        console.error("Błąd pobierania wydarzeń:", err);
+    }
+}
+
+// Wywołaj fetchEventsFromDB() przy starcie strony (wewnątrz DOMContentLoaded) zamiast starego generateCalendar()
+
+// --- 2. FUNKCJA: GENEROWANIE INTERAKTYWNEGO KALENDARZA ---
 function generateCalendar() {
-    const container = document.getElementById('calendar-days-container');
-    const monthYearHeader = document.getElementById('calendar-month-year');
-    if (!container || !monthYearHeader) return;
-    
-    container.innerHTML = ''; 
+    const calendarContainer = document.getElementById('calendar-container');
+    if (!calendarContainer) return;
 
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth(); 
-    const todayDate = now.getDate();
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
 
-    const monthName = now.toLocaleString(currentLanguage === 'pl' ? 'pl-PL' : 'en-US', { month: 'long' });
-    monthYearHeader.textContent = `${monthName} ${currentYear}`;
+    const monthNames = {
+        pl: ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"],
+        en: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    };
 
-    const daysShort = currentLanguage === 'pl' 
-        ? ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'] 
-        : ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    // Korekta na polski standard (Poniedziałek jako pierwszy dzień tygodnia)
+    const startingDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1; 
+    const totalDays = new Date(year, month + 1, 0).getDate();
 
-    daysShort.forEach(day => {
-        const dayNameDiv = document.createElement('div');
-        dayNameDiv.className = 'cal-day-name';
-        dayNameDiv.textContent = day;
-        container.appendChild(dayNameDiv);
-    });
+    // Szablon struktury kalendarza z nagłówkiem i nawigacją
+    let html = `
+        <div class="calendar-header">
+            <button onclick="changeMonth(-1)" class="cal-nav-btn">&lt;</button>
+            <span class="calendar-month-title">${monthNames[currentLanguage][month]} ${year}</span>
+            <button onclick="changeMonth(1)" class="cal-nav-btn">&gt;</button>
+        </div>
+        <div class="calendar-grid">
+            <div class="day-name">Pn</div><div class="day-name">Wt</div><div class="day-name">Śr</div>
+            <div class="day-name">Czw</div><div class="day-name">Pt</div><div class="day-name">Sb</div><div class="day-name">Nd</div>
+    `;
 
-    const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
-    const startingPoint = firstDayIndex === 0 ? 6 : firstDayIndex - 1; 
-    const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-    for (let i = 0; i < startingPoint; i++) {
-        const emptyDiv = document.createElement('div');
-        emptyDiv.className = 'cal-day empty';
-        container.appendChild(emptyDiv);
+    // Puste dni na początku miesiąca
+    for (let i = 0; i < startingDay; i++) {
+        html += `<div class="day empty"></div>`;
     }
 
-    const eventDays = [6, 20];
-
+    // Generowanie dni miesiąca
     for (let day = 1; day <= totalDays; day++) {
-        const dayDiv = document.createElement('div');
-        dayDiv.className = 'cal-day';
-        dayDiv.textContent = day;
-
-        if (day === todayDate) dayDiv.classList.add('today');
-
-        if (eventDays.includes(day)) {
-            dayDiv.classList.add('has-event');
-            dayDiv.onclick = () => alert(translations.event_notice || "Event!");
+        // Formatowanie daty do postaci YYYY-MM-DD
+        const currentDataStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        
+        // Szukamy wydarzeń przypisanych do tego dnia
+        const dayEvents = dbEvents.filter(e => e.event_date === currentDataStr);
+        const hasEvent = dayEvents.length > 0;
+        
+        // Tytuły dymków (tooltipów)
+        let tooltipText = "";
+        if (hasEvent) {
+            tooltipText = dayEvents.map(e => currentLanguage === 'pl' ? e.title_pl : e.title_en).join(', ');
         }
-        container.appendChild(dayDiv);
+
+        let adminEditClass = isAdmin ? 'admin-editable-day' : '';
+        let eventClass = hasEvent ? 'has-event' : '';
+
+        html += `
+            <div class="day ${eventClass} ${adminEditClass}" 
+                 data-date="${currentDataStr}"
+                 onmouseenter="showTooltip(event, '${tooltipText}')"
+                 onmouseleave="hideTooltip()"
+                 onclick="handleDayClick('${currentDataStr}', ${hasEvent})">
+                 ${day}
+            </div>
+        `;
+    }
+
+    html += `</div>`;
+    
+    // Na samym dole kalendarza dodajemy listę opisową aktualnych wydarzeń
+    html += `<div id="calendar-events-list"></div>`;
+    
+    calendarContainer.innerHTML = html;
+    updateUnderCalendarList(year, month);
+}
+
+// --- 3. NAWIGACJA: ZMIANA MIESIĘCY ---
+function changeMonth(direction) {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
+    generateCalendar();
+}
+
+// --- 4. DYMKI (TOOLTIPY) PO NAJECHANIU MYSZKĄ ---
+function showTooltip(event, text) {
+    if (!text) return;
+    let tooltip = document.getElementById('calendar-tooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'calendar-tooltip';
+        document.body.appendChild(tooltip);
+    }
+    tooltip.textContent = text;
+    tooltip.style.display = 'block';
+    tooltip.style.left = (event.pageX + 10) + 'px';
+    tooltip.style.top = (event.pageY + 10) + 'px';
+}
+
+function hideTooltip() {
+    const tooltip = document.getElementById('calendar-tooltip');
+    if (tooltip) tooltip.style.display = 'none';
+}
+
+// --- 5. INFORMACJA O WYDARZENIACH POD KALENDARZEM ---
+function updateUnderCalendarList(year, month) {
+    const listContainer = document.getElementById('calendar-events-list');
+    if (!listContainer) return;
+
+    // Filtrujemy wydarzenia tylko z aktualnie wyświetlanego miesiąca
+    const currentMonthEvents = dbEvents.filter(e => {
+        const evDate = new Date(e.event_date);
+        return evDate.getFullYear() === year && evDate.getMonth() === month;
+    });
+
+    if (currentMonthEvents.length === 0) {
+        listContainer.innerHTML = `<p class="no-events-info">${currentLanguage === 'pl' ? 'Brak wydarzeń w tym miesiącu.' : 'No events this month.'}</p>`;
+        return;
+    }
+
+    let listHtml = `<h4>${currentLanguage === 'pl' ? 'Wydarzenia w tym miesiącu:' : 'Events this month:'}</h4><ul>`;
+    currentMonthEvents.forEach(e => {
+        const day = new Date(e.event_date).getDate();
+        const title = currentLanguage === 'pl' ? e.title_pl : e.title_en;
+        listHtml += `<li><strong>${day}:</strong> ${title}</li>`;
+    });
+    listHtml += `</ul>`;
+    listContainer.innerHTML = listHtml;
+}
+
+// --- 6. OBSŁUGA KLIKNIĘCIA (DLA UŻYTKOWNIKA I DLA ADMINA) ---
+async function handleDayClick(dateStr, hasEvent) {
+    const dayEvents = dbEvents.filter(e => e.event_date === dateStr);
+    
+    // TRYB ADMINISTRATORA: Dodawanie, edycja i usuwanie wydarzeń
+    if (isAdmin) {
+        if (hasEvent) {
+            const event = dayEvents[0]; // Edytujemy pierwsze wydarzenie danego dnia
+            const action = prompt("Wpisz 'E' aby edytować, 'U' aby usunąć wydarzenie:");
+            
+            if (action && action.toUpperCase() === 'E') {
+                const newTitlePl = prompt("Podaj nową nazwę (PL):", event.title_pl);
+                const newTitleEn = prompt("Podaj nową nazwę (EN):", event.title_en);
+                if (newTitlePl && newTitleEn) {
+                    await _supabase.from('events').update({ title_pl: newTitlePl, title_en: newTitleEn }).eq('id', event.id);
+                    alert("Zmieniono wydarzenie!");
+                    fetchEventsFromDB(); // Odśwież dane
+                }
+            } else if (action && action.toUpperCase() === 'U') {
+                if (confirm("Czy na pewno chcesz usunąć to wydarzenie?")) {
+                    await _supabase.from('events').delete().eq('id', event.id);
+                    alert("Usunięto wydarzenie!");
+                    fetchEventsFromDB();
+                }
+            }
+        } else {
+            // Dodawanie nowego wydarzenia
+            const titlePl = prompt("Dodaj nowe wydarzenie (PL):");
+            const titleEn = prompt("Dodaj nowe wydarzenie (EN):");
+            if (titlePl && titleEn) {
+                await _supabase.from('events').insert([{ event_date: dateStr, title_pl: titlePl, title_en: titleEn }]);
+                alert("Dodano nowe wydarzenie!");
+                fetchEventsFromDB();
+            }
+        }
+    } else {
+        // TRYB ZWYKŁEGO UŻYTKOWNIKA: Kliknięcie pokazuje klasyczny alert
+        if (hasEvent) {
+            const titles = dayEvents.map(e => currentLanguage === 'pl' ? e.title_pl : e.title_en).join('\n');
+            alert(`${dateStr}:\n${titles}`);
+        }
     }
 }
 
@@ -292,12 +491,18 @@ if (lightbox) {
 }
 
 // --- INICJALIZACJA STARTOWA STRONY ---
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    // 1. Pobieramy preferowany język
     const savedLang = localStorage.getItem('preferred_language') || 'pl';
+    currentLanguage = savedLang;
+
+    // 2. Ładujemy teksty/tłumaczenia z bazy Supabase
+    await loadTranslationsFromDB(); 
     
-    // Pierwsze uruchomienie pobierania z bazy danych Supabase
-    changeLanguage(savedLang);
-    
+    // 3. NOWOŚĆ: Ładujemy wydarzenia do kalendarza z nowej tabeli
+    await fetchEventsFromDB(); 
+
+    // 4. Obsługa zakładek / podstron
     const currentHash = window.location.hash.replace('#', '') || 'home';
     renderPage(currentHash);
 });

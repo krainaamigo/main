@@ -160,19 +160,15 @@
                 <div class="contact-container">
                     <div class="contact-info">
                         <div class="info-item">
-                            <i class="fas fa-phone-alt"></i>
-                            <div>
-                                <p><strong>Telefon:</strong></p>
-                                <a href="tel:+48790709410">+48 790 709 410</a>
-                            </div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <i class="fas fa-envelope"></i>
-                            <div>
-                                <p><strong>E-mail:</strong></p>
-                                <a href="mailto:kontakt@amigopark.pl">kontakt.amigo1@gmail.com</a>
-                            </div>
+                            <a href="tel:+48790709410" class="btn btn-tel">
+                                <i class="fas fa-phone"></i> <span>Zadzwoń do nas</span>
+                            </a>
+                            <a href="mailto:kontakt.amigo1@gmail.pl" class="btn btn-mail">
+                                <i class="fas fa-envelope"></i> <span>Napisz e-mail</span>
+                            </a>
+                            <a href="https://maps.app.goo.gl/Bmb78SRDMfY3UxxF6" class="btn btn-maps" target="_blank">
+                                <i class="fas fa-map-marker-alt"></i> <span>Zobacz dojazd (Mapy)</span>
+                            </a>
                         </div>
                         
                         <div class="info-item">
@@ -182,17 +178,19 @@
                                 <div class="social-links">
                                     <a href="https://facebook.com" target="_blank" class="fb"><i class="fab fa-facebook-f"></i> Facebook</a>
                                     <a href="https://instagram.com" target="_blank" class="ig"><i class="fab fa-instagram"></i> Instagram</a>
+                                    <a href="https://wa.me/48790709410" target="_blank" class="wa"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                                    <a href="https://www.tiktok.com/@kraina.rozrywki.a" target="_blank" class="tt"><i class="fab fa-tiktok"></i> TikTok</a>
                                 </div>
                             </div>
                         </div>
                     </div>
-
+<!-- 
                     <form class="contact-form" onsubmit="event.preventDefault(); alert('Wiadomość wysłana!');">
                         <div class="form-group"><input type="text" placeholder="Imię / Name" required></div>
                         <div class="form-group"><input type="email" placeholder="E-mail" required></div>
                         <div class="form-group"><textarea rows="4" placeholder="Twoja wiadomość / Message" required></textarea></div>
                         <button type="submit" class="submit-btn" data-i18n="contact_btn">Wyślij</button>
-                    </form>
+                    </form> -->
                 </div>
             </section>
         </main>
@@ -206,9 +204,11 @@
             </div>
 
             <div class="sidebar-panel">
-                <h3 data-i18n="sidebar_cal">Kalendarz Wydarzeń</h3>
-                <div id="calendar-month-year" class="calendar-header"></div>
-                <div class="calendar-grid" id="calendar-days-container"></div>
+                <section id="oferta-kalendarz">
+                    <h3 data-i18n="calendar_title">Kalendarz Wydarzeń</h3>
+                    
+                    <div id="calendar-container"></div>
+                </section>
             </div>
         </aside>
     </div>
@@ -225,7 +225,6 @@
     <button onclick="loginAsAdmin()" id="btn-admin-login">Zaloguj jako Admin</button>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <script src="script.js"></script>
 </body>
 </html>

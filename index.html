@@ -46,16 +46,10 @@
             <section id="page-attractions" class="page-section">
                 <h2 data-i18n="attractions_title"></h2>
                 <p data-i18n="attractions_desc"></p>
-            </section>
-
-            <section id="page-gallery" class="page-section">
-                <h2 data-i18n="gallery_title"></h2>
-                <p data-i18n="gallery_desc"></p>
-                
-                <div class="grid-gallery">
+                <div class="grid-attractions">
                     <div class="ticket-wrapper">
                         <div class="ticket-body">
-                            <img class="gallery-img" src="images/gallery/bajonki.jpeg" alt="Bajonki">
+                            <img class="attractions-img" src="images/attractions/bajonki.jpeg" alt="Bajonki">
                             <div class="ticket-stub">
                                 <span data-i18n="img_1"></span>
                             </div>
@@ -64,7 +58,7 @@
 
                     <div class="ticket-wrapper">
                         <div class="ticket-body">
-                            <img class="gallery-img" src="images/gallery/hipopotamy.jpeg" alt="Hipopotamy">
+                            <img class="attractions-img" src="images/attractions/hipopotamy.jpeg" alt="Hipopotamy">
                             <div class="ticket-stub">
                                 <span data-i18n="img_2"></span>
                             </div>
@@ -73,7 +67,7 @@
 
                     <div class="ticket-wrapper">
                         <div class="ticket-body">
-                            <img class="gallery-img" src="images/gallery/safari.jpeg" alt="Safari">
+                            <img class="attractions-img" src="images/attractions/safari.jpeg" alt="Safari">
                             <div class="ticket-stub">
                                 <span data-i18n="img_3"></span>
                             </div>
@@ -82,7 +76,7 @@
 
                     <div class="ticket-wrapper">
                         <div class="ticket-body">
-                            <img class="gallery-img" src="images/gallery/lodeczki.jpeg" alt="Łódeczki wodne">
+                            <img class="attractions-img" src="images/attractions/lodeczki.jpeg" alt="Łódeczki wodne">
                             <div class="ticket-stub">
                                 <span data-i18n="img_4"></span>
                             </div>
@@ -90,7 +84,7 @@
                     </div>
                     <div class="ticket-wrapper">
                         <div class="ticket-body">
-                            <img class="gallery-img" src="images/gallery/walec.jpeg" alt="Walec wodny">
+                            <img class="attractions-img" src="images/attractions/walec.jpeg" alt="Walec wodny">
                             <div class="ticket-stub">
                                 <span data-i18n="img_5"></span>
                             </div>
@@ -98,7 +92,7 @@
                     </div>
                     <div class="ticket-wrapper">
                         <div class="ticket-body">
-                            <img class="gallery-img" src="images/gallery/eliminator.jpeg" alt="Eliminator">
+                            <img class="attractions-img" src="images/attractions/eliminator.jpeg" alt="Eliminator">
                             <div class="ticket-stub">
                                 <span data-i18n="img_6"></span>
                             </div>
@@ -106,7 +100,7 @@
                     </div>
                     <div class="ticket-wrapper">
                         <div class="ticket-body">
-                            <img class="gallery-img" src="images/gallery/eurobungee.jpeg" alt="Eurobungee">
+                            <img class="attractions-img" src="images/attractions/eurobungee.jpeg" alt="Eurobungee">
                             <div class="ticket-stub">
                                 <span data-i18n="img_7"></span>
                             </div>
@@ -114,7 +108,7 @@
                     </div>
                     <div class="ticket-wrapper">
                         <div class="ticket-body">
-                            <img class="gallery-img" src="images/gallery/kolejka.jpeg" alt="Kolejka">
+                            <img class="attractions-img" src="images/attractions/kolejka.jpeg" alt="Kolejka">
                             <div class="ticket-stub">
                                 <span data-i18n="img_8"></span>
                             </div>
@@ -122,7 +116,7 @@
                     </div>
                     <div class="ticket-wrapper">
                         <div class="ticket-body">
-                            <img class="gallery-img" src="images/gallery/kosz.jpeg" alt="Koszykówka">
+                            <img class="attractions-img" src="images/attractions/kosz.jpeg" alt="Koszykówka">
                             <div class="ticket-stub">
                                 <span data-i18n="img_9"></span>
                             </div>
@@ -130,7 +124,7 @@
                     </div>
                     <div class="ticket-wrapper">
                         <div class="ticket-body">
-                            <img class="gallery-img" src="images/gallery/namiot.jpeg" alt="Namiot">
+                            <img class="attractions-img" src="images/attractions/namiot.jpeg" alt="Namiot">
                             <div class="ticket-stub">
                                 <span data-i18n="img_10"></span>
                             </div>
@@ -138,7 +132,7 @@
                     </div>
                     <div class="ticket-wrapper">
                         <div class="ticket-body">
-                            <img class="gallery-img" src="images/gallery/nagrody.jpeg" alt="Nagrody">
+                            <img class="attractions-img" src="images/attractions/nagrody.jpeg" alt="Nagrody">
                             <div class="ticket-stub">
                                 <span data-i18n="img_11"></span>
                             </div>
@@ -147,10 +141,32 @@
                 </div>
             </section>
 
+            <section id="page-gallery" class="page-section">
+                <h2 data-i18n="gallery_title"></h2>
+                <p data-i18n="gallery_desc"></p>
+                
+                <div id="albums-container" class="albums-grid"></div>
+            </section>
+
+            <div id="album-preview-modal" class="custom-modal" style="display: none;">
+                <div class="modal-content album-preview-content">
+                    <span class="close-modal" onclick="closeAlbumModal()">&times;</span>
+                    <h3 id="modal-album-title">Nazwa Albumu</h3>
+                    
+                    <div id="admin-add-photo-zone" style="display:none; margin-bottom:20px;">
+                        <input type="file" id="album-photo-input" accept="image/*" multiple style="display:none;" onchange="uploadPhotosToAlbum()">
+                        <button onclick="document.getElementById('album-photo-input').click()" class="admin-btn save-btn"><i class="fas fa-plus"></i> Dodaj zdjęcia do albumu</button>
+                    </div>
+
+                    <div id="album-photos-grid" class="photos-grid"></div>
+                </div>
+            </div>
+
+
             <section id="page-offer" class="page-section">
-                <h2 data-i18n="offer_title">Cennik i Pakiety</h2>
+                <h2 data-i18n="offer_title"></h2>
                 <ul style="margin: 20px; padding-left: 20px; line-height: 2;">
-                    <li data-i18n="price_1">Bilet normalny: 59 zł / dzień</li>
+                    <li data-i18n="price_1"></li>
                 </ul>
             </section>
 
@@ -198,14 +214,12 @@
         <aside class="sidebar">
             <div class="sidebar-panel notice-board">
                 <h3 data-i18n="sidebar_news">Informacje Bieżące</h3>
-                <ul>
-                    <li><i class="fas fa-bullhorn"></i> <span data-i18n="news_1">Park otwarty dzisiaj do godziny 21:00!</span></li>
-                </ul>
+                <ul id="news-container"></ul>
             </div>
 
             <div class="sidebar-panel">
                 <section id="oferta-kalendarz">
-                    <h3 data-i18n="calendar_title">Kalendarz Wydarzeń</h3>
+                    <h3 data-i18n="calendar_title"></h3>
                     
                     <div id="calendar-container"></div>
                 </section>
@@ -222,7 +236,7 @@
 
     <div id="admin-save-bar" style="display: none;"></div>
 
-    <button onclick="loginAsAdmin()" id="btn-admin-login">Zaloguj jako Admin</button>
+    <button onclick="loginAsAdmin()" id="btn-admin-login"></button>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>

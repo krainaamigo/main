@@ -1,5 +1,5 @@
 :root {
-    --menu: #313131; /*#2ecc71;*/
+    --menu: #3e9531; /*#2ecc71;*/
     --primary: #313131;
     --accent: #e74c3c; /* Kolor czerwonego biletu */
     --bg: #f5f7fa;/*#4a90e2; /*#4CBB17;*/
@@ -42,14 +42,17 @@ header {
 
 /* Opcjonalny styl dla przycisku logowania ukrytego np. w stopce strony */
 #btn-admin-login {
+    width: 20px;
+    height: 20px;
     position: fixed;
     bottom: 10px;
     right: 10px;
-    opacity: 0.3; /* Przyciemniony, żeby nie rzucał się w oczy zwykłym użytkownikom */
+    opacity: 0; /* Przyciemniony, żeby nie rzucał się w oczy zwykłym użytkownikom */
     transition: opacity 0.3s;
 }
 #btn-admin-login:hover {
-    opacity: 1; /* Podświetla się po najechaniu */
+    opacity: 0.3; /* Podświetla się po najechaniu */
+    cursor: pointer;
 }
 
 /* Ustawienie paska tak, aby tekst był po lewej, a przyciski po prawej */
@@ -105,8 +108,8 @@ header {
 
 nav { display: flex; align-items: center; }
 .nav-links { display: flex; list-style: none; gap: 20px; }
-.nav-links a { color: #000000; text-decoration: none; font-weight: 600; transition: 0.3s; cursor: pointer; }
-.nav-links a:hover, .nav-links a.active { color: #e74c3c; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+.nav-links a { color: white; text-decoration: none; font-weight: 600; transition: 0.3s; cursor: pointer; }
+.nav-links a:hover, .nav-links a.active { color: rgb(39, 39, 237); text-shadow: 0 0 5px rgba(255,255,255,0.5); }
 
 .header-right { display: flex; align-items: center; gap: 20px; }
 .weather-widget { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
@@ -115,6 +118,43 @@ nav { display: flex; align-items: center; }
 .lang-btn { background: none; border: 1px solid white; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: 600; transition: 0.3s; }
 .lang-btn.active { background-color: var(--accent); border-color: var(--accent); }
 .menu-toggle { display: none; font-size: 24px; background: none; border: none; color: white; cursor: pointer; }
+
+/* Stylizacja ikon pogodowych */
+/* .fa-sun {
+    color: #f1c40f !important; 
+    filter: drop-shadow(0 0 4px rgba(241, 196, 15, 0.4));
+}
+
+.fa-cloud {
+    color: #bdc3c7 !important;
+}
+
+.fa-cloud-sun {
+    color: #f39c12 !important;
+}
+
+.fa-cloud-showers-heavy, .fa-cloud-rain {
+    color: #3498db !important; 
+}
+
+.fa-bolt {
+    color: #e67e22 !important; 
+}
+
+.fa-snowflake {
+    color: #74b9ff !important; 
+}
+
+.fa-smog, .fa-cloud-meatball {
+    color: #95a5a6 !important;
+}
+
+.fa-sun {
+    animation: spinSun 20s linear infinite;
+}
+@keyframes spinSun {
+    100% { transform: rotate(360deg); }
+} */
 
 /* UKŁAD STRONY */
 .main-layout { display: flex; max-width: 1400px; width: 100%; margin: 30px auto; padding: 0 5%; gap: 30px; flex-grow: 1; }
@@ -235,6 +275,11 @@ p { line-height: 1.7; color: #555; margin-bottom: 15px; }
 .notice-board li { padding: 10px 0; border-bottom: 1px solid #eee; font-size: 14px; display: flex; gap: 10px; text-align: left; }
 .notice-board li i { color: var(--accent); margin-top: 3px; }
 
+.admin-editable-news {
+    border: 1px dashed var(--primary-blue);
+}
+
+
 /* ==========================================================================
    W PEŁNI POPRAWIONY I STYLIZOWANY KALENDARZ (Z POPRAWNYMI KLASAMI)
    ========================================================================== */
@@ -258,7 +303,7 @@ p { line-height: 1.7; color: #555; margin-bottom: 15px; }
 /* Przyciski nawigacji miesięcy < oraz > */
 .cal-nav-btn {
     background-color: var(--primary-blue);
-    color: white;
+    color: var(--text);
     border: none;
     padding: 6px 14px;
     font-weight: bold;
@@ -302,7 +347,7 @@ p { line-height: 1.7; color: #555; margin-bottom: 15px; }
     text-align: center;
     color: var(--text-dark);
     transition: background 0.2s, color 0.2s;
-    border: 1px solid rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.1);
 }
 
 /* Puste kafelki wyrównujące początek miesiąca */
@@ -317,16 +362,38 @@ p { line-height: 1.7; color: #555; margin-bottom: 15px; }
     cursor: pointer;
 }
 
+/* Przykładowy styl dla dzisiejszego dnia */
+.calendar-grid .day.today {
+    border: 2px solid #3498db; /* Wyrazista niebieska ramka wokół dnia */
+    font-weight: bold;
+    color: #3498db;
+    position: relative;
+}
+
+/* Opcjonalnie: mała kropka pod numerem dnia oznaczająca "dzisiaj" */
+.calendar-grid .day.today::after {
+    content: '';
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background-color: #3498db;
+    border-radius: 50%;
+}
+
 /* Dni posiadające aktywne wydarzenia (w kolorze var(--accent-green)) */
 .day.has-event {
-    background-color: var(--accent-green) !important;
+    border: 1px solid black;
+    background-color: rgba(28, 172, 40, 0.952) !important;
     color: white !important;
     font-weight: 700;
-    box-shadow: 0 2px 6px rgba(46, 204, 113, 0.3);
+    opacity: 0.4;
 }
 
 .day.has-event:hover {
-    background-color: var(--accent-green-hover) !important;
+    background-color:  rgba(12, 72, 17, 0.952) !important;
 }
 
 /* Wizualna przerywana ramka wokół dni dla zalogowanego admina */
@@ -403,7 +470,7 @@ p { line-height: 1.7; color: #555; margin-bottom: 15px; }
 
 /* --- NOWA GALERIA: KARTA BILETOWA DLA KAŻDEGO ZDJĘCIA --- */
 /* ZAKTUALIZOWANA GALERIA: Układ siatki dla biletów */
-.grid-gallery { 
+.grid-attractions { 
     display: grid; 
     /* Samoczynnie mieści bilety: minimum 280px szerokości, maks 3 w jednej linii na dużym ekranie */
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
@@ -413,9 +480,8 @@ p { line-height: 1.7; color: #555; margin-bottom: 15px; }
     margin-right: 20px;
     background: transparent !important; 
 }
-.grid-gallery::before { display: none; }
+.grid-attractions::before { display: none; }
 
-/* 1. GŁÓWNY KONTENER (Teraz jest CZARNYM tłem/ramką dla biletu) */
 /* 1. GŁÓWNY KONTENER - CZARNA RAMKA SOLID */
 .ticket-wrapper {
     position: relative; 
@@ -506,6 +572,120 @@ p { line-height: 1.7; color: #555; margin-bottom: 15px; }
     border-left: 3px dotted var(--accent); 
 }
 
+
+/* --- GALERIA ---*/
+/* Siatka albumów */
+.albums-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 30px;
+    padding: 20px;
+}
+
+/* Styl pojedynczego zdjęcia Instax (Folderu) */
+.instax-folder {
+    background: #fff;
+    padding: 12px 12px 30px 12px; /* Grubsza dolna część */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    border: 1px solid #e6e6e6;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+    position: relative;
+}
+
+.instax-folder:hover {
+    transform: rotate(-2deg) scale(1.03); /* Lekkie zawadiackie obrócenie */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+}
+
+.instax-cover {
+    width: 100%;
+    aspect-ratio: 1 / 1; /* Kwadratowe zdjęcie jak w Instaxie */
+    object-fit: cover;
+    filter: sepia(10%) contrast(105%); /* Delikatny filtr retro */
+    background: #eee;
+}
+
+.instax-title {
+    font-family: 'Poppins', sans-serif; /* Możesz zmienić na font odręczny */
+    font-weight: 600;
+    color: #333;
+    margin-top: 15px;
+    font-size: 14px;
+    word-wrap: break-word;
+}
+
+/* Przyciski admina na Instaxie */
+.admin-album-actions {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    display: flex;
+    gap: 5px;
+}
+.admin-mini-btn {
+    background: rgba(255,255,255,0.9);
+    border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;
+}
+.admin-mini-btn:hover { background: #e74c3c; color: white; }
+
+/* Styl tła dla okna modalnego (overlay) */
+#album-preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7); /* Przyciemnienie tła strony */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999; /* Wysoki indeks, aby okno było nad wszystkim */
+}
+
+/* Karta z zawartością wewnątrz okna */
+.album-preview-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 700px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto; /* Przewijanie, jeśli w albumie jest mnóstwo zdjęć */
+    position: relative;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+    animation: fadeInModal 0.3s ease;
+}
+
+/* Przycisk zamknięcia (X) */
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 30px;
+    cursor: pointer;
+    color: #aaa;
+    transition: color 0.2s;
+}
+.close-modal:hover {
+    color: #333;
+}
+
+/* Siatka zdjęć wewnątrz otwartego albumu */
+.photos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+/* Animacja delikatnego pojawiania się */
+@keyframes fadeInModal {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
 
 /* --- SEKCJA KONTAKT --- */
 .contact-container { display: flex; gap: 30px; margin-top: 20px; }

@@ -842,13 +842,13 @@ h1 { font-size: 24px; color: #2c3e50; margin-bottom: 8px; font-weight: 700; }
 @media (max-width: 768px) {
     
     body {
-        padding: 10px;
+        padding: 0px;
         border: none !important;
         background-color: var(--bg);
     }
 
     header { 
-        padding: 10px 15px; 
+        padding: 10px, 15px; 
     }
     
     .menu-toggle { display: block; order: 1; }
@@ -874,7 +874,7 @@ h1 { font-size: 24px; color: #2c3e50; margin-bottom: 8px; font-weight: 700; }
         margin: 10px auto; 
         gap: 25px;
     }
-    .content-area { width: 100%; }
+    .content-area { width: 90%; margin: auto }
     .sidebar { min-width: 100%; width: 100%; }
 
     /* --- CO CAŁKOWICIE NAPRAWIA GŁÓWNY BILET (.page-section) --- */
@@ -944,7 +944,7 @@ h1 { font-size: 24px; color: #2c3e50; margin-bottom: 8px; font-weight: 700; }
     .ticket-wrapper {
         width: 100%;
         max-width: 100%;
-        padding: 5px;
+        padding: 25px;
     }
 
     .ticket-body {
@@ -973,6 +973,9 @@ h1 { font-size: 24px; color: #2c3e50; margin-bottom: 8px; font-weight: 700; }
     }
 
     .contact-container { flex-direction: column; gap: 20px; }
+    .contact-info { width: 90%; margin: auto }
     .lightbox-prev { left: 10px; } 
     .lightbox-next { right: 10px; }
+
+    .sidebar-panel { width: 90%; margin: auto;}
 }

@@ -409,7 +409,7 @@ p { line-height: 1.7; color: #555; margin-bottom: 15px; }
 /* .day.has-event { */
 .calendar-grid .day.today {
     border: 1px solid black;
-    background-color: rgba(28, 172, 40, 0.952) !important;
+    background-color: rgba(0, 131, 11, 0.952) !important;
     color: white !important;
     font-weight: 700;
     opacity: 0.4;
@@ -880,16 +880,16 @@ h1 { font-size: 24px; color: #2c3e50; margin-bottom: 8px; font-weight: 700; }
     /* --- CO CAŁKOWICIE NAPRAWIA GŁÓWNY BILET (.page-section) --- */
     .page-section { 
         display: none; /* Trzymamy logikę przełączania stron */
-        padding: 20px; 
-        border-radius: 10px;
-        box-sizing: border-box;
+        padding: 40px; 
+        /* border-radius: 10px;
+        box-sizing: border-box; */
         height: auto !important; /* Pozwalamy biletowi rosnąć w dół wraz z tekstem */
         
         /* 1. Na telefonie rezygnujemy ze skomplikowanego radial-gradient jako ramki, 
            ponieważ nie dopasowuje się do dynamicznej wysokości. Dajemy stabilny design biletu: */
-        background: var(--panel-bg) !important; /* Całe wnętrze staje się jednolicie białe */
-        border: 4px solid #000000 !important;   /* Ostra, komiksowa czarna krawędź */
-        box-shadow: inset 0 0 0 8px var(--accent); /* Czerwony pasek dekoracyjny jako wewnętrzny cień! */
+        /* background: var(--panel-bg) !important; 
+        border: 4px solid #000000 !important;  
+        box-shadow: inset 0 0 0 8px var(--accent); */
     }
 
     .page-section.active { 
@@ -898,11 +898,11 @@ h1 { font-size: 24px; color: #2c3e50; margin-bottom: 8px; font-weight: 700; }
     
     /* 2. Całkowicie wyłączamy generowanie nakładek przed i po, 
        które na telefonie łamały tekst i tworzyły czerwone/czarne plamy */
-    .page-section::before,
+    /* .page-section::before,
     .page-section::after { 
         display: none !important; 
         content: none !important;
-    }
+    } */
     
     /* 3. Kluczowa linia: Usuwamy indywidualne białe tła dla pojedynczych liter i bloków.
        Tekst leży teraz bezpośrednio na białym tle całego kontenera .page-section */

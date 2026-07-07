@@ -836,16 +836,14 @@ h1 { font-size: 24px; color: #2c3e50; margin-bottom: 8px; font-weight: 700; }
 .delete-btn { background: #e74c3c; }
 .delete-btn:hover { background: #c0392b; }
 
-/* TELEFONY (MEDIA QUERIES) */
 /* ==========================================================================
-   W PEŁNI ZRESPONSYWNY UKŁAD DLA TELEFONÓW (WERSJA BEZ RAMKI Z LIŚCI)
+   W PEŁNI ZRESPONSYWNY UKŁAD DLA TELEFONÓW (NAPRAWA BILETU I TEKSTU)
    ========================================================================== */
 @media (max-width: 768px) {
     
-    /* 1. Reset tła i naturalne marginesy strony */
     body {
-        padding: 10px;          /* Minimalna, estetyczna przestrzeń od krawędzi ekranu telefonu */
-        border: none !important; /* Całkowicie usuwamy ramkę z body */
+        padding: 10px;
+        border: none !important;
         background-color: var(--bg);
     }
 
@@ -870,68 +868,85 @@ h1 { font-size: 24px; color: #2c3e50; margin-bottom: 8px; font-weight: 700; }
     nav.open { display: block; }
     .nav-links { flex-direction: column; gap: 15px; text-align: center; }
 
-    /* 2. Układ pionowy: Chowa sidebar pod spód, rozciąga treść na 100% */
     .main-layout { 
         flex-direction: column; 
         padding: 0; 
         margin: 10px auto; 
         gap: 25px;
     }
-    .content-area {
-        width: 100%;
-    }
-    .sidebar { 
-        min-width: 100%; 
-        width: 100%;
+    .content-area { width: 100%; }
+    .sidebar { min-width: 100%; width: 100%; }
+
+    /* --- CO CAŁKOWICIE NAPRAWIA GŁÓWNY BILET (.page-section) --- */
+    .page-section { 
+        display: none; /* Trzymamy logikę przełączania stron */
+        padding: 20px; 
+        border-radius: 10px;
+        box-sizing: border-box;
+        height: auto !important; /* Pozwalamy biletowi rosnąć w dół wraz z tekstem */
+        
+        /* 1. Na telefonie rezygnujemy ze skomplikowanego radial-gradient jako ramki, 
+           ponieważ nie dopasowuje się do dynamicznej wysokości. Dajemy stabilny design biletu: */
+        background: var(--panel-bg) !important; /* Całe wnętrze staje się jednolicie białe */
+        border: 4px solid #000000 !important;   /* Ostra, komiksowa czarna krawędź */
+        box-shadow: inset 0 0 0 8px var(--accent); /* Czerwony pasek dekoracyjny jako wewnętrzny cień! */
     }
 
-    /* 3. NAPRAWA GŁÓWNEGO OKNA (.page-section - Wielki Bilet) */
-    .page-section { 
-        padding: 15px; /* Zmniejszamy padding, by zyskać cenne miejsce na tekst */
+    .page-section.active { 
+        display: block; 
     }
     
-    /* Czerwony pasek dekoracyjny (warstwa środkowa) dopasowuje się do krawędzi */
-    .page-section::before { 
-        top: 2px; left: 2px; right: 2px; bottom: 2px; 
-    }
-    
-    /* Biały arkusz tekstowy wewnątrz bocznych krawędzi */
+    /* 2. Całkowicie wyłączamy generowanie nakładek przed i po, 
+       które na telefonie łamały tekst i tworzyły czerwone/czarne plamy */
+    .page-section::before,
     .page-section::after { 
-        position: absolute;
-        top: 12px; 
-        left: 12px;
-        right: 12px;
-        bottom: 12px;
-        z-index: 1;
+        display: none !important; 
+        content: none !important;
     }
     
-    /* Czyszczenie teł podrzędnych elementów, aby nie zasłaniały białego arkusza */
+    /* 3. Kluczowa linia: Usuwamy indywidualne białe tła dla pojedynczych liter i bloków.
+       Tekst leży teraz bezpośrednio na białym tle całego kontenera .page-section */
     .page-section h2, 
     .page-section p, 
     .page-section img, 
     .page-section ul, 
     .page-section form, 
     .page-section .contact-container {
-        background-color: transparent !important;
+        background-color: transparent !important; /* Koniec z uciętymi białymi prostokątami! */
+        background: transparent !important;
+        position: relative;
+        z-index: 5;
+        margin-bottom: 12px;
     }
 
-    /* 4. SIATKA ATRAKCJI (Pionowe układanie biletów) */
+    /* Dopasowanie marginesów dla nagłówka i tekstu wewnątrz "nowego" biletu */
+    .page-section h2 {
+        font-size: 22px;
+        line-height: 1.3;
+        margin-top: 10px; /* Lekkie odsunięcie od czerwonego paska u góry */
+    }
+    
+    .page-section p {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    /* --- RESZTA UKŁADÓW ATRAKCJI --- */
     .grid-attractions {
-        grid-template-columns: 1fr; /* Jeden bilet pod drugim */
+        grid-template-columns: 1fr;
         margin-left: 0;
         margin-right: 0;
         width: 100%;
         gap: 20px;
+        background: transparent !important;
     }
 
-    /* 5. MAŁE BILETY ATRAKCJI (.ticket-wrapper) */
     .ticket-wrapper {
         width: 100%;
         max-width: 100%;
-        padding: 5px; /* Cieńsza czarna/czerwona krawędź małego biletu */
+        padding: 5px;
     }
 
-    /* Zdjęcie i opis lądują jedno pod drugim */
     .ticket-body {
         width: 100%;
         height: auto; 
@@ -940,26 +955,23 @@ h1 { font-size: 24px; color: #2c3e50; margin-bottom: 8px; font-weight: 700; }
         margin: 0;
     }
 
-    /* Zdjęcie na telefonie staje się banerem na górze biletu */
     .ticket-body img { 
         max-width: 100%; 
         width: 100%;
-        height: 160px; /* Optymalna wysokość zdjęcia na smartfonie */
+        height: 160px; 
         border-right: none;
-        border-bottom: 3px solid var(--accent); /* Krawędź oddzielająca zdjęcie od tekstu */
+        border-bottom: 3px solid var(--accent); 
         margin-right: 0;
     }
 
-    /* Część informacyjna (odrywana) na samym dole */
     .ticket-stub { 
         width: 100%; 
         padding: 12px;
         font-size: 14px; 
         border-left: none;
-        border-top: 3px dotted var(--accent); /* Dziurkowana linia oddzielająca ląduje w poziomie */
+        border-top: 3px dotted var(--accent); 
     }
 
-    /* 6. Formularz i sekcja kontaktowa */
     .contact-container { flex-direction: column; gap: 20px; }
     .lightbox-prev { left: 10px; } 
     .lightbox-next { right: 10px; }

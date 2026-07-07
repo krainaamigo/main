@@ -11,6 +11,10 @@ let translations = {};
 
 // --- 1. POBIERANIE TEKSTÓW Z BAZY SUPABASE ---
 async function loadTranslationsFromDB() {
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById(`btn-${currentLanguage}`);
+    if (activeBtn) activeBtn.classList.add('active');
+
     try {
         let { data, error } = await _supabase.from('translations').select('*');        
         if (error) {throw error;}
@@ -41,30 +45,133 @@ async function loadTranslationsFromDB() {
 }
 
 // --- 2. LOGOWANIE ADMINISTRATORA (BEZPIECZNE) ---
-async function loginAsAdmin() {
-    const email = prompt("Email administratora:");
-    const password = prompt("Hasło:");
+// async function loginAsAdmin() {
+//     const email = prompt("Email administratora:");
+//     const password = prompt("Hasło:");
 
-    if (!email || !password) return;
+//     if (!email || !password) return;
 
-    // Supabase weryfikuje dane w chmurze i zapisuje token sesji
-    const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+//     // Supabase weryfikuje dane w chmurze i zapisuje token sesji
+//     const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-        alert("Błąd logowania: " + error.message);
+//     if (error) {
+//         alert("Błąd logowania: " + error.message);
+//         return;
+//     }
+
+//     alert("Zalogowano pomyślnie! Tryb edycji został aktywowany.");
+    
+//     isAdmin = true; 
+    
+//     enableLiveEditing();
+//     generateCalendar();
+//     fetchAlbums();
+// }
+
+function loginAsAdmin() {
+    const modal = document.getElementById('admin-login-modal');
+    const emailInput = document.getElementById('admin-email-input');
+    const passwordInput = document.getElementById('admin-password-input');
+    
+    if (modal && passwordInput && emailInput) {
+        emailInput.value = ""; // Czyszczenie pola email
+        passwordInput.value = ""; // Czyszczenie hasła
+        passwordInput.type = "password"; 
+        
+        const icon = document.getElementById('toggle-password-icon');
+        if (icon) { icon.className = "fas fa-eye"; } 
+        
+        modal.style.display = 'flex'; 
+        emailInput.focus(); // Ustawiamy kursor od razu na polu e-mail
+        
+        // Obsługa logowania po kliknięciu ENTER w polu hasła
+        passwordInput.onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                submitAdminLogin();
+            }
+        };
+        // Obsługa przechodzenia do hasła po kliknięciu ENTER w polu email
+        emailInput.onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                passwordInput.focus();
+            }
+        };
+    }
+}
+
+// 2. FUNKCJA ZAMYKANIA OKIENKA
+function closeAdminLoginModal() {
+    const modal = document.getElementById('admin-login-modal');
+    if (modal) { modal.style.display = 'none'; }
+}
+
+// 3. FUNKCJA PRZEŁĄCZANIA WIDOCZNOŚCI HASŁA (Oko / Przekreślone oko)
+function togglePasswordVisibility() {
+    const input = document.getElementById('admin-password-input');
+    const icon = document.getElementById('toggle-password-icon');
+    
+    if (input && icon) {
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'fas fa-eye-slash'; // Zmiana na ikonę przekreślonego oka
+        } else {
+            input.type = 'password';
+            icon.className = 'fas fa-eye'; // Zmiana z powrotem na normalne oko
+        }
+    }
+}
+
+// 4. FUNKCJA ZATWIERDZENIA I SPRAWDZENIA HASŁA
+async function submitAdminLogin() {
+    const emailInput = document.getElementById('admin-email-input');
+    const passwordInput = document.getElementById('admin-password-input');
+    if (!emailInput || !passwordInput) return;
+    
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    
+    if (!email || !password) {
+        alert("E-mail oraz hasło nie mogą być puste.");
         return;
     }
 
-    alert("Zalogowano pomyślnie! Tryb edycji został aktywowany.");
+    const userAgent = navigator.userAgent;
     
-    // Włączamy flagę admina globalnie
-    isAdmin = true; 
-    
-    // Uruchamiamy edycję tekstów na żywo
-    enableLiveEditing();
-    
-    // Ponownie generujemy kalendarz, żeby dorysował ramki edycji dla admina!
-    generateCalendar(); 
+    try {
+        // Przekazujemy wpisany przez Ciebie email oraz hasło do bazy danych
+        const { data, error } = await _supabase.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+        
+        if (error) {
+            alert("Błędny e-mail lub hasło administratora!");
+            passwordInput.value = "";
+            passwordInput.focus();
+        } else {
+            isAdmin = true;
+            closeAdminLoginModal(); 
+            enableLiveEditing();
+            generateCalendar();
+            fetchAlbums();
+
+            await _supabase.from('login_history').insert([{
+                email: email,
+                device_info: userAgent,
+                logged_at: new Date().toISOString(),
+                successful: true
+            }]);
+            alert("Zalogowano jako administrator.");
+        }
+    } catch (err) {
+        await _supabase.from('login_history').insert([{
+            email: email,
+            device_info: userAgent,
+            logged_at: new Date().toISOString(),
+            successful: false
+        }]);
+        alert("Błąd logowania: " + err.message);
+    }
 }
 
 // --- FUNKCJA WYLOGOWANIA DLA ADMINISTRATORA ---
@@ -79,6 +186,7 @@ async function logoutAdmin() {
             const adminBar = document.getElementById('admin-save-bar');
             if (adminBar) adminBar.style.display = 'none';
 
+            document.querySelectorAll('.admin-photo-buttons').forEach(el => el.style.display = 'none');
             // Usuwamy możliwość edycji z pól tekstowych
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 el.removeAttribute('contenteditable');
@@ -90,6 +198,8 @@ async function logoutAdmin() {
             await loadTranslationsFromDB();
             await fetchNewsFromDB();
             await fetchEventsFromDB();            
+            await fetchAlbums();
+            await fetchPricingFromDB();      
         } catch (error) {
             alert("Błąd podczas wylogowywania: " + error.message);
         }
@@ -100,6 +210,10 @@ async function logoutAdmin() {
 let localChanges = {}; 
 
 function enableLiveEditing() {
+    document.querySelectorAll('.admin-photo-buttons').forEach(el => el.style.display = 'flex');
+    document.getElementById('admin-pricing-control').style.display = 'block';
+    fetchPricingFromDB(); // Przeładuje cennik, aby pokazać ikonki edycji i kosza
+
     document.querySelectorAll('[data-i18n]').forEach(el => {
         el.setAttribute('contenteditable', 'true');
         
@@ -117,6 +231,7 @@ function enableLiveEditing() {
     // Dodatkowo wymuszamy przebudowanie kalendarza w trybie admina
     renderNews();
     generateCalendar();
+    fetchAlbums();
 }
 
 // Funkcja zarządzająca wyglądem paska na dole
@@ -206,16 +321,15 @@ async function changeLanguage(lang) {
     currentLanguage = lang;
     localStorage.setItem('preferred_language', lang);
     
-    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-    const activeBtn = document.getElementById(`btn-${lang}`);
-    if (activeBtn) activeBtn.classList.add('active');
-    
     // Pobierz z bazy teksty dla nowo wybranego języka
     await loadTranslationsFromDB();
     // Odśwież kalendarz pod nowy język
-    generateCalendar();
+    await generateCalendar();
     // Odśwież pogodę
-    fetchWeather();
+    await fetchWeather();
+    await fetchNewsFromDB();
+    await fetchAlbums();
+    await fetchPricingFromDB();
 }
 
 // --- 5. POGODA Z API (Open-Meteo) ---
@@ -715,10 +829,18 @@ async function uploadFileToStorage(file, folder = "main") {
     return publicUrl;
 }
 
-// Wywołaj tę funkcję, gdy Admin chce zmienić/dodać zdjęcie na stronie głównej
-async function handleMainPagePhotoChange(elementId, dbTable, rowId) {
+
+// 1. UNIWERSALNE WGRYWANIE/AKTUALIZACJA ZDJĘCIA
+async function uploadManagedPhoto(buttonElement) {
     if (!isAdmin) return;
     
+    const zone = buttonElement.closest('.photo-management-zone');
+    const imgElement = zone.querySelector('.managed-photo');
+    if (!imgElement) return;
+
+    const dbTable = imgElement.getAttribute('data-db-table');
+    const rowId = parseInt(imgElement.getAttribute('data-db-id')); // Konwertujemy na liczbę
+
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -728,20 +850,81 @@ async function handleMainPagePhotoChange(elementId, dbTable, rowId) {
         if (!file) return;
         
         try {
-            alert("Trwa wgrywanie zdjęcia...");
-            const photoUrl = await uploadFileToStorage(file, "main_page");
+            const photoUrl = await uploadFileToStorage(file, "dynamic_pages");
             
-            // Aktualizujemy rekord w odpowiedniej tabeli w bazie danych
-            const { error } = await _supabase.from(dbTable).update({ photo_url: photoUrl }).eq('id', rowId);
-            if (!error) {
-                document.getElementById(elementId).src = photoUrl;
-                alert("Zdjęcie zaktualizowane pomyślnie!");
-            } else throw error;
+            // ZAMIANA .update() NA .upsert() -> Inteligentny zapis/aktualizacja
+            const { error } = await _supabase
+                .from(dbTable)
+                .upsert({ id: rowId, photo_url: photoUrl }); // Przekazujemy też ID, żeby wiedział który wiersz stworzyć/zaktualizować
+                
+            if (error) throw error;
+            
+            imgElement.src = photoUrl;
+            imgElement.style.display = "block";
+            alert("Zdjęcie zostało zapisane w bazie danych i zaktualizowane!");
         } catch (err) {
-            alert("Błąd wgrywania: " + err.message);
+            alert("Błąd zapisu w bazie danych: " + err.message);
         }
     };
     input.click();
+}
+
+// 2. UNIWERSALNE USUWANIE ZDJĘCIA
+async function deleteManagedPhoto(buttonElement) {
+    if (!isAdmin) return;
+    if (!confirm("Czy na pewno chcesz usunąć to zdjęcie?")) return;
+
+    const zone = buttonElement.closest('.photo-management-zone');
+    const imgElement = zone.querySelector('.managed-photo');
+    if (!imgElement) return;
+
+    const dbTable = imgElement.getAttribute('data-db-table');
+    const rowId = imgElement.getAttribute('data-db-id');
+
+    try {
+        const { error } = await _supabase
+            .from(dbTable)
+            .update({ photo_url: null })
+            .eq('id', rowId);
+            
+        if (error) throw error;
+        
+        imgElement.src = "";
+        imgElement.style.display = "none";
+        alert("Zdjęcie usunięte.");
+    } catch (err) {
+        alert("Błąd usuwania: " + err.message);
+    }
+}
+
+// AUTOMATYCZNE ŁADOWANIE WSZYSTKICH ZDJĘĆ Z BAZY
+async function loadAllManagedPhotos() {
+    const allPhotos = document.querySelectorAll('.managed-photo');
+    
+    // Przechodzimy po każdym znalezionym obrazku na stronie
+    for (const img of allPhotos) {
+        const dbTable = img.getAttribute('data-db-table');
+        const rowId = img.getAttribute('data-db-id');
+        
+        try {
+            // Pytamy bazę danych dynamicznie o konkretną tabelę i ID
+            const { data, error } = await _supabase
+                .from(dbTable)
+                .select('photo_url')
+                .eq('id', rowId)
+                .maybeSingle(); // maybeSingle zapobiega wywaleniu błędu gdy wiersz jeszcze nie istnieje
+                
+            if (!error && data && data.photo_url) {
+                img.src = data.photo_url;
+                img.style.display = "block"; // Pokazujemy zdjęcie, bo jest w bazie
+            } else {
+                img.src = "";
+                img.style.display = "none"; // Ukrywamy, jeśli pole w bazie jest puste
+            }
+        } catch (e) {
+            console.error("Błąd ładowania zdjęcia dla", dbTable, rowId, e);
+        }
+    }
 }
 
 
@@ -771,10 +954,11 @@ async function fetchAlbums() {
         }
         
         albums.forEach(album => {
+            const title = currentLanguage === 'pl' ? album.title_pl : album.title_en;
             html += `
-                <div class="instax-folder" onclick="openAlbum('${album.id}', '${album.title}')">
+                <div class="instax-folder" onclick="openAlbum('${album.id}', '${title}')">
                     <img src="${album.cover_url || 'https://via.placeholder.com/300?text=Pusty+Album'}" class="instax-cover">
-                    <div class="instax-title">${album.title}</div>
+                    <div class="instax-title">${title}</div>
                     ${isAdmin ? `
                         <div class="admin-album-actions" onclick="event.stopPropagation()">
                             <button class="admin-mini-btn" onclick="deleteAlbum('${album.id}')"><i class="fas fa-trash"></i></button>
@@ -803,9 +987,15 @@ async function createNewAlbum() {
         if (!file) return; // Jeśli zamknął okno bez wyboru, przerywamy
         
         // 3. Dopiero PO wybraniu zdjęcia pytamy o tytuł (bezpieczna kolejność)
-        const title = prompt("Podaj tytuł nowego albumu (podpis na Instaxie):");
-        if (!title || title.trim() === "") {
-            alert("Anulowano tworzenie albumu (brak tytułu).");
+        const title_pl = prompt("Podaj tytuł nowego albumu po polsku (podpis na Instaxie):");
+        if (!title_pl || title_pl.trim() === "") {
+            alert("Anulowano tworzenie albumu (brak tytułu po polsku).");
+            return; 
+        }
+
+        const title_en = prompt("Podaj tytuł nowego albumu po angielsku (podpis na Instaxie):");
+        if (!title_en || title_en.trim() === "") {
+            alert("Anulowano tworzenie albumu (brak tytułu po angielsku).");
             return; 
         }
         
@@ -814,7 +1004,7 @@ async function createNewAlbum() {
             const coverUrl = await uploadFileToStorage(file, "covers");
             
             // Zapisujemy nowy album w bazie danych
-            const { error } = await _supabase.from('albums').insert([{ title: title.trim(), cover_url: coverUrl }]);
+            const { error } = await _supabase.from('albums').insert([{ title_pl: title_pl.trim(), title_en: title_pl.trim(), cover_url: coverUrl }]);
             if (!error) {
                 alert("Album stworzony pomyślnie!");
                 fetchAlbums(); // Odświeżamy widok galerii
@@ -878,14 +1068,6 @@ function closeAlbumModal() {
     }
 }
 
-// Zamknięcie modala albumu po kliknięciu w ciemne tło poza oknem zawartości
-window.addEventListener('click', (e) => {
-    const modal = document.getElementById('album-preview-modal');
-    if (e.target === modal) {
-        closeAlbumModal();
-    }
-});
-
 async function fetchAlbumPhotos(albumId) {
     const { data: photos, error } = await _supabase.from('album_photos').select('*').eq('album_id', albumId);
     if (error) return;
@@ -947,7 +1129,7 @@ function openFullscreenPhoto(index) {
     lightbox.innerHTML = `
         <span onclick="document.getElementById('gallery-lightbox').remove()" style="position:absolute; top:20px; right:30px; color:white; font-size:40px; cursor:pointer;">&times;</span>
         <button onclick="navigatePhoto(-1)" style="position:absolute; left:20px; background:none; border:none; color:white; font-size:40px; cursor:pointer;"><i class="fas fa-chevron-left"></i></button>
-        <img id="lightbox-img" src="${currentAlbumPhotos[currentPhotoIndex].photo_url}" style="max-width:85%; max-height:85%; object-fit:contain; box-shadow:0 0 20px rgba(255,255,255,0.2);">
+        <img id="gallery-lightbox-img" src="${currentAlbumPhotos[currentPhotoIndex].photo_url}" style="max-width:85%; max-height:85%; object-fit:contain; box-shadow:0 0 20px rgba(255,255,255,0.2);">
         <button onclick="navigatePhoto(1)" style="position:absolute; right:20px; background:none; border:none; color:white; font-size:40px; cursor:pointer;"><i class="fas fa-chevron-right"></i></button>
     `;
     
@@ -956,12 +1138,10 @@ function openFullscreenPhoto(index) {
 
 function navigatePhoto(direction) {
     currentPhotoIndex += direction;
-    
-    // Zapętlanie zdjęć (jeśli wykroczy poza zakres)
     if (currentPhotoIndex < 0) currentPhotoIndex = currentAlbumPhotos.length - 1;
     if (currentPhotoIndex >= currentAlbumPhotos.length) currentPhotoIndex = 0;
     
-    const img = document.getElementById('lightbox-img');
+    const img = document.getElementById('gallery-lightbox-img'); // <-- Tutaj zmiana!
     if (img) {
         img.src = currentAlbumPhotos[currentPhotoIndex].photo_url;
     }
@@ -999,6 +1179,134 @@ function changeImage(direction) {
     if (currentImgIndex >= galleryImages.length) currentImgIndex = 0;
     if (currentImgIndex < 0) currentImgIndex = galleryImages.length - 1;
     lightboxImg.src = galleryImages[currentImgIndex].children[0].children[0].src;
+}
+
+// --- ZARZĄDZANIE CENNIKIEM ---
+
+// 1. Pobieranie i renderowanie cennika
+async function fetchPricingFromDB() {
+    const container = document.getElementById('pricing-container');
+    const adminControl = document.getElementById('admin-pricing-control');
+    if (!container) return;
+
+    // --- TWÓJ POMYSŁ W PRAKTYCE: Dynamiczny przycisk główny ---
+    if (adminControl) {
+        if (isAdmin) {
+            // Jeśli admin jest zalogowany, tworzymy przycisk w locie
+            adminControl.innerHTML = `
+                <button onclick="addPricingItem()" class="admin-photo-btn upload-btn" style="margin-bottom: 20px;">
+                    <i class="fas fa-plus"></i> Dodaj nową pozycję
+                </button>
+            `;
+        } else {
+            // Jeśli to zwykły użytkownik, kontener jest całkowicie pusty
+            adminControl.innerHTML = "";
+        }
+    }
+
+    try {
+        let { data: pricing, error } = await _supabase
+            .from('prices')
+            .select('*')
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        let html = "";
+        pricing.forEach(item => {
+            const title = currentLanguage === 'pl' ? item.title_pl : item.title_en;
+            
+            // Dynamiczne przyciski wiersza (tylko dla admina)
+            const adminButtons = isAdmin ? `
+                <div class="pricing-actions">
+                    <button onclick="editPricingItem(${item.id}, '${item.title_pl}', '${item.title_en}', '${item.price}')" class="admin-photo-btn upload-btn" style="padding:4px 8px; font-size:11px;"><i class="fas fa-edit"></i></button>
+                    <button onclick="deletePricingItem(${item.id})" class="admin-photo-btn delete-btn" style="padding:4px 8px; font-size:11px;"><i class="fas fa-trash"></i></button>
+                </div>
+            ` : '';
+
+            html += `
+                <div class="pricing-item">
+                    <div class="pricing-info">
+                        <div class="pricing-title">${title}</div>
+                    </div>
+                    <div class="pricing-cost">${item.price}</div>
+                    ${adminButtons}
+                </div>
+            `;
+        });
+
+        container.innerHTML = html || "<p style='text-align:center; color:#999;'>Brak pozycji w cenniku.</p>";
+    } catch (err) {
+        console.error("Błąd ladowania cennika:", err);
+    }
+}
+
+// 2. Dodawanie nowej pozycji
+async function addPricingItem() {
+    if (!isAdmin) return;
+
+    const titlePl = prompt("Podaj nazwę usługi po polsku:");
+    if (!titlePl) return;
+    const titleEn = prompt("Podaj nazwę usługi po angielsku:");
+    if (!titleEn) return;
+    const price = prompt("Podaj cenę (np. '50 zł', 'od 120 zł', 'Free'):");
+    if (!price) return;
+
+    try {
+        const { error } = await _supabase
+            .from('prices')
+            .insert([{ title_pl: titlePl.trim(), title_en: titleEn.trim(), price: price.trim() }]);
+
+        if (error) throw error;
+        alert("Pozycja dodana pomyślnie!");
+        fetchPricingFromDB(); // Odświeżamy widok cennika
+    } catch (err) {
+        alert("Błąd dodawania: " + err.message);
+    }
+}
+
+// 3. Edycja istniejącej pozycji
+async function editPricingItem(id, oldPl, oldEn, oldPrice) {
+    if (!isAdmin) return;
+
+    const titlePl = prompt("Edytuj nazwę po polsku:", oldPl);
+    if (!titlePl) return;
+    const titleEn = prompt("Edytuj nazwę po angielsku:", oldEn);
+    if (!titleEn) return;
+    const price = prompt("Edytuj cenę:", oldPrice);
+    if (!price) return;
+
+    try {
+        const { error } = await _supabase
+            .from('prices')
+            .update({ title_pl: titlePl.trim(), title_en: titleEn.trim(), price: price.trim() })
+            .eq('id', id);
+
+        if (error) throw error;
+        alert("Cennik zaktualizowany!");
+        fetchPricingFromDB();
+    } catch (err) {
+        alert("Błąd edycji: " + err.message);
+    }
+}
+
+// 4. Usuwanie pozycji
+async function deletePricingItem(id) {
+    if (!isAdmin) return;
+    if (!confirm("Czy na pewno chcesz usunąć tę pozycję z cennika?")) return;
+
+    try {
+        const { error } = await _supabase
+            .from('prices')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+        alert("Pozycja usunięta.");
+        fetchPricingFromDB();
+    } catch (err) {
+        alert("Błąd usuwania: " + err.message);
+    }
 }
 
 window.addEventListener('keydown', (e) => {
@@ -1040,6 +1348,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         await fetchEventsFromDB(); 
         await fetchNewsFromDB();
         await fetchAlbums();
+        await loadAllManagedPhotos();
+        await fetchPricingFromDB();
 
         if (isAdmin) {
             enableLiveEditing();
@@ -1057,4 +1367,15 @@ window.addEventListener('DOMContentLoaded', async () => {
 window.addEventListener('hashchange', () => {
     const currentHash = window.location.hash.replace('#', '') || 'home';
     renderPage(currentHash);
+});
+
+window.addEventListener('click', (e) => {
+    const loginModal = document.getElementById('admin-login-modal');
+    if (e.target === loginModal) {
+        closeAdminLoginModal();
+    }
+    const modal = document.getElementById('album-preview-modal');
+    if (e.target === modal) {
+        closeAlbumModal();
+    }
 });

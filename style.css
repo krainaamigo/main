@@ -837,28 +837,130 @@ h1 { font-size: 24px; color: #2c3e50; margin-bottom: 8px; font-weight: 700; }
 .delete-btn:hover { background: #c0392b; }
 
 /* TELEFONY (MEDIA QUERIES) */
+/* ==========================================================================
+   W PEŁNI ZRESPONSYWNY UKŁAD DLA TELEFONÓW (WERSJA BEZ RAMKI Z LIŚCI)
+   ========================================================================== */
 @media (max-width: 768px) {
+    
+    /* 1. Reset tła i naturalne marginesy strony */
     body {
-        padding: 15px;
-        border-width: 20px; /* Cieńsza ramka z liści na smartfonach */
+        padding: 10px;          /* Minimalna, estetyczna przestrzeń od krawędzi ekranu telefonu */
+        border: none !important; /* Całkowicie usuwamy ramkę z body */
+        background-color: var(--bg);
     }
-    header { padding: 15px 20px; }
+
+    header { 
+        padding: 10px 15px; 
+    }
+    
     .menu-toggle { display: block; order: 1; }
     .header-right { order: 2; gap: 10px; }
     .weather-widget { display: none; }
-    nav { display: none; position: absolute; top: 100%; left: 0; right: 0; background-color: var(--primary); padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    
+    nav { 
+        display: none; 
+        position: absolute; 
+        top: 100%; 
+        left: 0; 
+        right: 0; 
+        background-color: var(--primary); 
+        padding: 20px; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+    }
     nav.open { display: block; }
     .nav-links { flex-direction: column; gap: 15px; text-align: center; }
-    .main-layout { flex-direction: column; padding: 0 15px; margin: 15px auto; }
-    .sidebar { min-width: 100%; }
+
+    /* 2. Układ pionowy: Chowa sidebar pod spód, rozciąga treść na 100% */
+    .main-layout { 
+        flex-direction: column; 
+        padding: 0; 
+        margin: 10px auto; 
+        gap: 25px;
+    }
+    .content-area {
+        width: 100%;
+    }
+    .sidebar { 
+        min-width: 100%; 
+        width: 100%;
+    }
+
+    /* 3. NAPRAWA GŁÓWNEGO OKNA (.page-section - Wielki Bilet) */
+    .page-section { 
+        padding: 15px; /* Zmniejszamy padding, by zyskać cenne miejsce na tekst */
+    }
     
-    .page-section { padding: 15px; }
-    .page-section::before { top: 12px; left: 12px; right: 12px; bottom: 12px; }
+    /* Czerwony pasek dekoracyjny (warstwa środkowa) dopasowuje się do krawędzi */
+    .page-section::before { 
+        top: 2px; left: 2px; right: 2px; bottom: 2px; 
+    }
     
+    /* Biały arkusz tekstowy wewnątrz bocznych krawędzi */
+    .page-section::after { 
+        position: absolute;
+        top: 12px; 
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        z-index: 1;
+    }
+    
+    /* Czyszczenie teł podrzędnych elementów, aby nie zasłaniały białego arkusza */
+    .page-section h2, 
+    .page-section p, 
+    .page-section img, 
+    .page-section ul, 
+    .page-section form, 
+    .page-section .contact-container {
+        background-color: transparent !important;
+    }
+
+    /* 4. SIATKA ATRAKCJI (Pionowe układanie biletów) */
+    .grid-attractions {
+        grid-template-columns: 1fr; /* Jeden bilet pod drugim */
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+        gap: 20px;
+    }
+
+    /* 5. MAŁE BILETY ATRAKCJI (.ticket-wrapper) */
+    .ticket-wrapper {
+        width: 100%;
+        max-width: 100%;
+        padding: 5px; /* Cieńsza czarna/czerwona krawędź małego biletu */
+    }
+
+    /* Zdjęcie i opis lądują jedno pod drugim */
+    .ticket-body {
+        width: 100%;
+        height: auto; 
+        flex-direction: column; 
+        align-items: stretch;
+        margin: 0;
+    }
+
+    /* Zdjęcie na telefonie staje się banerem na górze biletu */
+    .ticket-body img { 
+        max-width: 100%; 
+        width: 100%;
+        height: 160px; /* Optymalna wysokość zdjęcia na smartfonie */
+        border-right: none;
+        border-bottom: 3px solid var(--accent); /* Krawędź oddzielająca zdjęcie od tekstu */
+        margin-right: 0;
+    }
+
+    /* Część informacyjna (odrywana) na samym dole */
+    .ticket-stub { 
+        width: 100%; 
+        padding: 12px;
+        font-size: 14px; 
+        border-left: none;
+        border-top: 3px dotted var(--accent); /* Dziurkowana linia oddzielająca ląduje w poziomie */
+    }
+
+    /* 6. Formularz i sekcja kontaktowa */
     .contact-container { flex-direction: column; gap: 20px; }
-    .ticket-body img { max-width: 65%; }
-    .ticket-stub { width: 35%; font-size: 12px; }
-    
     .lightbox-prev { left: 10px; } 
     .lightbox-next { right: 10px; }
 }

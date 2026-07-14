@@ -145,6 +145,16 @@ async function submitAdminLogin() {
         });
         
         if (error) {
+            try {
+                await _supabase.from('login_history').insert([{
+                    email: email,
+                    device_info: userAgent,
+                    logged_at: new Date().toISOString(),
+                    successful: false
+                }]);
+            } catch (dbErr) {
+                console.error("Nie udało się zapisać logu do bazy (prawdopodobnie RLS):", dbErr);
+            }
             alert("Błędny e-mail lub hasło administratora!");
             passwordInput.value = "";
             passwordInput.focus();
@@ -1317,6 +1327,44 @@ window.addEventListener('keydown', (e) => {
 });
 if (lightbox) {
     lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+}
+
+// 1. Nasłuchiwanie na wejście z linku resetującego hasło
+_supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === "PASSWORD_RECOVERY") {
+    // Użytkownik przyszedł z maila – pokazujemy mu formularz w HTML
+    const resetSection = document.getElementById("reset-password-section");
+    if (resetSection) {
+      resetSection.style.display = "block"; 
+    }
+  }
+});
+
+// 2. Obsługa wysłania formularza (kliknięcie "Zapisz nowe hasło")
+const resetForm = document.getElementById("reset-password-form");
+if (resetForm) {
+  resetForm.addEventListener("submit", async (e) => {
+    e.preventDefault(); // Zapobiega przeładowaniu strony
+
+    const newPassword = document.getElementById("new-password").value;
+
+    // Wysyłamy nowe hasło do Supabase
+    const { data, error } = await _supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      alert("Wystąpił błąd podczas zmiany hasła: " + error.message);
+    } else {
+      alert("Hasło zostało pomyślnie zmienione! Możesz się teraz zalogować.");
+      
+      // Ukrywamy formularz po udanej operacji
+      document.getElementById("reset-password-section").style.display = "none";
+      
+      // Opcjonalnie: przekierowanie lub odświeżenie strony
+      // window.location.reload();
+    }
+  });
 }
 
 // --- INICJALIZACJA STARTOWA STRONY ---
